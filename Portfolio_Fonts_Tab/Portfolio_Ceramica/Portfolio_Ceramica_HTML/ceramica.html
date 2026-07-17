@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ceramica — Project</title>
+  <style>
+    @font-face {
+      font-family: 'Ceramica';
+      src: url('../Portfolio_Ceramica_Font/Ceramicadone.otf') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+  </style>
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/topbar.css" />
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/project-description.css" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --bg:#f9f9f7;
+      --ink:#111;
+    }
+    body.dark {
+      --bg:#0b0b0b;
+      --ink:#f5f1e8;
+    }
+
+    body {
+      background:var(--bg);
+      color:var(--ink);
+      font-family:'Ceramica', serif;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:3.5rem 1.5rem 2rem;
+      transition:background .3s ease, color .3s ease;
+    }
+
+    main {
+      width:100%;
+      display:grid;
+      place-items:center;
+      text-align:center;
+    }
+
+    .word {
+      font-size: clamp(64px, 18vw, 240px);
+      letter-spacing:-0.04em;
+      line-height:0.9;
+      text-transform:uppercase;
+      cursor:pointer;
+      outline:none;
+    }
+
+    .word span,
+    .word .letter {
+      display:inline-block;
+    }
+
+    .word .letter {
+      transform-origin:50% 60%;
+      transition:transform 0.18s ease, color 0.25s ease;
+      transform:translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--scale, 1));
+    }
+
+    .word.active .letter {
+      color:color-mix(in srgb, var(--ink) 78%, transparent);
+    }
+
+    .word:focus-visible { outline:2px dashed currentColor; outline-offset:8px; }
+
+    /* Keep shared top bar on the original typeface */
+    .topbar-nav,
+    .topbar-header,
+    .topbar-switch {
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="Ceramica title">
+    <div class="word">
+      <span>Ceramica</span>
+    </div>
+  </main>
+
+  <div class="noise" aria-hidden="true"></div>
+
+  <script src="../../../Portfolio_General_Items_Assets/topbar.js"></script>
+  <script>
+    (function(){
+      const word = document.querySelector('.word span');
+      if(!word) return;
+      const text = word.textContent.trim();
+      const letters = text.split('').map((ch, i) => {
+        const rot = (i % 2 === 0 ? 1 : -1) * 8;
+        const safeChar = ch === ' ' ? '&nbsp;' : ch;
+        return `<span class="letter" style="--i:${i}; --rot:${rot}deg;">${safeChar}</span>`;
+      }).join('');
+      word.innerHTML = letters;
+      const wrapper = word.parentElement;
+      if(!wrapper) return;
+      wrapper.setAttribute('tabindex', '0');
+
+      const chars = Array.from(wrapper.querySelectorAll('.letter'));
+      const radius = 220;
+      const maxPush = 38;
+      const maxScaleBoost = 0.08;
+      let raf = null;
+      let mouse = { x: null, y: null };
+
+      const apply = () => {
+        let anyActive = false;
+        chars.forEach(el => {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          if(mouse.x === null || mouse.y === null){
+            el.style.setProperty('--tx', '0px');
+            el.style.setProperty('--ty', '0px');
+            el.style.setProperty('--scale', '1');
+            return;
+          }
+          const dx = cx - mouse.x;
+          const dy = cy - mouse.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          if(dist > radius){
+            el.style.setProperty('--tx', '0px');
+            el.style.setProperty('--ty', '0px');
+            el.style.setProperty('--scale', '1');
+            return;
+          }
+          anyActive = true;
+          const force = (radius - dist) / radius;
+          const push = force * maxPush;
+          const tx = (dx / dist) * push;
+          const ty = (dy / dist) * push;
+          const scale = 1 + force * maxScaleBoost;
+          el.style.setProperty('--tx', `${tx}px`);
+          el.style.setProperty('--ty', `${ty}px`);
+          el.style.setProperty('--scale', scale.toFixed(3));
+        });
+        wrapper.classList.toggle('active', anyActive);
+        raf = null;
+      };
+
+      const handleMove = (e) => {
+        mouse = { x: e.clientX, y: e.clientY };
+        if(raf === null) raf = requestAnimationFrame(apply);
+      };
+
+      const reset = () => {
+        mouse = { x: null, y: null };
+        chars.forEach(el => {
+          el.style.setProperty('--tx', '0px');
+          el.style.setProperty('--ty', '0px');
+          el.style.setProperty('--scale', '1');
+        });
+        wrapper.classList.remove('active');
+      };
+
+      wrapper.addEventListener('mousemove', handleMove);
+      wrapper.addEventListener('mouseenter', handleMove);
+      wrapper.addEventListener('mouseleave', reset);
+      wrapper.addEventListener('focus', reset);
+      wrapper.addEventListener('click', reset);
+    })();
+  </script>
+  <script src="../../../Portfolio_General_Items_Assets/project-description.js"></script>
+</body>
+</html>

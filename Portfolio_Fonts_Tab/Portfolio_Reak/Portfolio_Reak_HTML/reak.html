@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REAK — Project</title>
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/topbar.css">
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/project-description.css">
+  <style>
+    :root { --bg:#f5f3ef; --ink:#dcd6d0; }
+    body.dark { --bg:#0f0f0f; color:#f5f3ef; }
+
+    :root {
+      --snap-speed: auto;
+    }
+    * { box-sizing:border-box; }
+
+    html, body {
+      margin:0;
+      width:100%;
+      height:100%;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background:var(--bg);
+      color:inherit;
+      overflow:hidden;
+      scroll-behavior: var(--snap-speed);
+    }
+
+    body {
+      scroll-snap-type:y mandatory;
+    }
+
+    .page {
+      width:100%;
+      height:100%;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scroll-snap-type:y mandatory;
+      scroll-snap-stop:always;
+      scroll-behavior: var(--snap-speed);
+    }
+
+    .section {
+      width:100vw;
+      height:100vh;
+      scroll-snap-align:start;
+      scroll-snap-stop:always;
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      color:inherit;
+    }
+    /* Stretch images to fill viewport (proportions may distort) */
+    .image-section {
+      background-size:100% 100%;
+      background-repeat:no-repeat;
+      background-position:center;
+      background-color:var(--bg);
+    }
+
+    /* Invert whole slides when dark mode is on */
+    body.dark .section {
+      filter: invert(1) hue-rotate(180deg);
+      background-color:#000;
+    }
+    /* Keep the last slides black in dark mode (skip inversion to mirror hero contrast) */
+    .dark-panel { background-color:var(--bg); }
+    body.dark .dark-panel {
+      filter:none;
+      background-color:#000;
+    }
+  </style>
+</head>
+<body>
+  <!-- top bar injected via shared script -->
+  <script src="../../../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <div class="page">
+    <section class="section hero-section" style="display:flex; align-items:center; justify-content:center; background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.92), rgba(240,236,232,0.82)), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.85), rgba(235,230,226,0.7)); color:var(--ink);">
+      <div class="reak-hero">
+        <div class="reak-title">
+          <span class="reak-letter">R</span>
+          <span class="reak-letter">E</span>
+          <span class="reak-letter">A</span>
+          <span class="reak-letter">K</span>
+        </div>
+      </div>
+    </section>
+    <section class="section image-section dark-panel" style="background-image:url('../Portfolio_Reak_Pictures/Portfolio_Reak-Sider_Page_1.png');"></section>
+    <section class="section image-section dark-panel" style="background-image:url('../Portfolio_Reak_Pictures/Portfolio_Reak-Sider_Page_2.png');"></section>
+    <section class="section image-section dark-panel" style="background-image:url('../Portfolio_Reak_Pictures/Portfolio_Reak-Sider_Page_3.png');"></section>
+  </div>
+
+  <style>
+    .reak-hero {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:0.8rem;
+    }
+    .reak-hero {
+      perspective:1800px;
+    }
+    .reak-title {
+      display:flex;
+      gap:0.02em;
+      font-family:'Reak', sans-serif;
+      font-size: clamp(260px, 30vw, 1400px);
+      letter-spacing:-0.03em;
+      text-transform:uppercase;
+      line-height:0.85;
+      pointer-events:auto;
+    }
+    .reak-letter {
+      display:inline-block;
+      color:var(--ink);
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), text-shadow 0.35s ease, color 0.35s ease;
+      will-change:transform, text-shadow;
+      transform-style:preserve-3d;
+      text-shadow:
+        -3px -3px 6px rgba(255,255,255,0.78),
+        2px 2px 5px rgba(0,0,0,0.16),
+        0 14px 24px rgba(0,0,0,0.16),
+        var(--glow-x, 0px) var(--glow-y, 0px) 20px rgba(0,0,0,0.2);
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,0.12));
+    }
+    body.dark .reak-letter { color:#000; }
+    .hero-section {
+      position:relative;
+      isolation:isolate;
+    }
+    .hero-section::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 25% 35%, rgba(255,255,255,0.22), transparent 40%),
+                 radial-gradient(circle at 80% 70%, rgba(255,255,255,0.12), transparent 50%);
+      mix-blend-mode:screen;
+      pointer-events:none;
+      z-index:0;
+    }
+    /* Blend top bar into backgrounds */
+    .topbar-nav,
+    .topbar-header,
+    .topbar-switch {
+      color:#292929; /* light grey base */
+      mix-blend-mode:exclusion; /* stays light while reacting to background */
+    }
+    body.dark .topbar-nav,
+    body.dark .topbar-header,
+    body.dark .topbar-switch {
+      color:#d2d4d0;
+      mix-blend-mode:screen;
+    }
+    .reak-hint {
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size:12px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      opacity:0.55;
+    }
+
+  </style>
+
+  <script>
+    // Reactive bend for REAK title on hover/move (anywhere in hero section)
+    (function(){
+      const hero = document.querySelector('.hero-section');
+      const title = document.querySelector('.reak-title');
+      if(!hero || !title) return;
+      const letters = Array.from(title.querySelectorAll('.reak-letter'));
+      let rafId;
+      function handleMove(e){
+        const rect = title.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1 to 1
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        const maxRot = 22;
+        const maxSkew = 16;
+        const maxY = 16;
+        const maxTilt = 24;
+        const maxDepth = 60;
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(()=>{
+          letters.forEach((el, idx)=>{
+            const offset = (idx - (letters.length-1)/2) / (letters.length/2);
+            const rot = maxRot * (x * 0.7 + offset * 0.6);
+            const skew = maxSkew * (y * 0.5 - offset * 0.4);
+            const ty = -maxY * y;
+            const tiltX = maxTilt * y;
+            const tiltY = -maxTilt * x;
+            const tz = maxDepth * (0.3 + Math.abs(x)*0.3 + Math.abs(offset)*0.4);
+            el.style.transform = `translateY(${ty.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) skew(${skew.toFixed(2)}deg) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg)`;
+            el.style.setProperty('--glow-x', `${(-tiltY*0.4).toFixed(2)}px`);
+            el.style.setProperty('--glow-y', `${(tiltX*0.25).toFixed(2)}px`);
+          });
+        });
+      }
+      function reset(){
+        letters.forEach(el=> {
+          el.style.transform = '';
+          el.style.setProperty('--glow-x', '0px');
+          el.style.setProperty('--glow-y', '0px');
+        });
+      }
+      hero.addEventListener('mousemove', handleMove);
+      hero.addEventListener('mouseleave', reset);
+    })();
+
+    // Scroll ends naturally (looping removed)
+
+  </script>
+  <script src="../../../Portfolio_General_Items_Assets/project-description.js"></script>
+</body>
+</html>

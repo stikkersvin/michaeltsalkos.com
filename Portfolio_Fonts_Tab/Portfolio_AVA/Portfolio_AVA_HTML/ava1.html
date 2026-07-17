@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVA — Project</title>
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/project-description.css">
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/topbar.css">
+  <style>
+    @font-face {
+      font-family: 'AVA';
+      src: url('../Portfolio_AVA_Font/AVA-VariableVF.woff2') format('woff2');
+      font-weight: 1 1000;
+      font-stretch: 0% 200%;
+    }
+
+    :root {
+      --snap-speed: auto;
+      --grid-gap: clamp(1vw, 2vw, 3vw);
+      --word-size-vw: 29;
+      --word-size: clamp(12vw, calc(var(--word-size-vw) * 1vw), 34vw);
+      --word-tria: 50;
+      --word-strc: 86;
+      --word-extd: 100;
+      --work-tria: 50;
+      --work-strc: 86;
+      --work-extd: 78;
+      --work-offset: 4.5vh;
+      --hard1-tria: 50;
+      --hard1-strc: 86;
+      --hard1-extd: 72;
+      --hard1-offset: 4.5vh;
+      --play-tria: 50;
+      --play-strc: 99;
+      --play-extd: 100;
+      --hard2-tria: 50;
+      --hard2-strc: 99;
+      --hard2-extd: 71;
+      --play-offset: 5.5vh;
+      --hard2-offset: 5.5vh;
+      --work-scale: 1;
+      --hard1-scale: 1;
+      --play-scale: 1;
+      --hard2-scale: 1;
+      --info-tria: 50;
+      --info-strc: 100;
+      --info-extd: 100;
+      --info-scale: 1;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'AVA', sans-serif;
+      /* snap jumps without easing */
+      scroll-behavior: var(--snap-speed);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: none;
+      scrollbar-gutter: stable;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Top bar from Index 5 */
+    .top-nav {
+      position: fixed;
+      top: 1rem;
+      left: 1.5rem;
+      z-index: 200;
+      white-space: nowrap;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      display: flex;
+      gap: 1.2rem;
+      color: #fff;
+      mix-blend-mode: exclusion;
+      transition: color 0.3s ease;
+    }
+    .top-nav a {
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .top-nav a:hover { opacity: 0.6; }
+
+    .top-title {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 1rem 1.5rem;
+      text-align: center;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: -0.015em;
+      text-transform: uppercase;
+      color: #fff;
+      mix-blend-mode: exclusion;
+      transition: color 0.3s ease;
+      z-index: 190;
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    body.dark {
+      background: #000;
+      color: #fff;
+    }
+
+    body.dark .page {
+      filter: invert(1);
+    }
+
+    .topbar-nav,
+    .topbar-header,
+    .topbar-about,
+    .topbar-switch {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #fff;
+      mix-blend-mode: difference;
+    }
+
+    .topbar-about {
+      color: #fff;
+      mix-blend-mode: difference;
+    }
+
+    body {
+      scroll-snap-type: y mandatory;
+      overflow-anchor: none;
+    }
+
+    .section {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      overflow: hidden;
+    }
+
+    .ava-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      line-height: 0.75;
+      font-variation-settings: 'TRIA' 50, 'STRC' 50, 'EXTD' 50;
+      padding: 2vh;
+    }
+
+    .ava-text span {
+      display: block;
+      font-size: clamp(5vw, 43vh, 35vw);
+      white-space: nowrap;
+      -webkit-text-stroke: 0;
+      -webkit-text-fill-color: currentColor;
+    }
+
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: left;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: 4vw 6vw;
+      gap: 3rem;
+      background: white;
+      color: black;
+      line-height: 1.05em;
+      font-size: clamp(40px, 7vw, 90px);
+      font-variation-settings: 'TRIA' var(--info-tria), 'STRC' var(--info-strc), 'EXTD' var(--info-extd);
+      text-transform: uppercase;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .info-body {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+      transform: scale(var(--info-scale));
+      transform-origin: top left;
+      z-index: 1;
+    }
+
+    .info-body p {
+      -webkit-text-stroke: 1px black;
+      -webkit-text-fill-color: black;
+    }
+
+    @media (max-height: 800px) {
+      .info-section {
+        padding: 3vw 4vw;
+        gap: 2rem;
+        font-size: clamp(28px, 6vw, 80px);
+        line-height: 1.05em;
+      }
+    }
+
+    .info-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      padding: 10px 12px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      backdrop-filter: blur(6px);
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.2s ease;
+      z-index: 5;
+    }
+
+    .info-controls.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .info-controls label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: 2%;
+      font-weight: 700;
+    }
+
+    .info-controls input[type="range"] {
+      width: 120px;
+    }
+
+    .info-controls .val {
+      min-width: 28px;
+      text-align: right;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: 2%;
+      font-weight: 400;
+    }
+
+    .ava-tester-section {
+      position: relative;
+      display: block;
+      padding: 0;
+      background: var(--ava-tester-background, #fff);
+      color: var(--ava-tester-color, #000);
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .ava-tester-controls {
+      position: absolute;
+      top: 3.5rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: start;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+    }
+
+    .ava-tester-control {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: 0.8rem 2rem;
+      gap: 0.25rem 0.2rem;
+      align-items: end;
+      min-width: 0;
+    }
+
+    .ava-tester-control > span {
+      grid-column: 1 / -1;
+      align-self: start;
+      font-size: 0.65rem;
+    }
+
+    .ava-tester-control input {
+      width: 100%;
+      min-width: 0;
+      accent-color: var(--ava-tester-color, #000);
+    }
+
+    .ava-tester-control input[type="range"] {
+      transform: translateY(-0.2rem);
+    }
+
+    .ava-color-control {
+      position: relative;
+      display: grid;
+      grid-template-rows: 0.8rem 2rem;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .ava-color-control > span {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.65rem;
+    }
+
+    .ava-color {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 2rem;
+      border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+      background: linear-gradient(
+        90deg,
+        #000 0%,
+        #f00 12%,
+        #ff0 25%,
+        #0f0 38%,
+        #0ff 50%,
+        #00f 63%,
+        #f0f 76%,
+        #f00 88%,
+        #fff 100%
+      );
+      cursor: crosshair;
+      touch-action: none;
+      transform: translateY(0.35rem);
+      --color-position: 50%;
+    }
+
+    .ava-color:focus-visible {
+      outline: 1px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    .ava-color-ring {
+      position: absolute;
+      top: 50%;
+      left: var(--color-position, 50%);
+      width: 0.65rem;
+      height: 0.65rem;
+      border: 0.5px solid #000;
+      border-radius: 50%;
+      background: transparent;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .ava-tester-control output {
+      min-width: 3.2rem;
+      justify-self: end;
+      text-align: right;
+      opacity: 0.55;
+    }
+
+    .ava-tester-text {
+      position: absolute;
+      inset: 0;
+      min-height: 100%;
+      height: 100%;
+      padding: 8rem 1.5rem 1.25rem;
+      overflow: auto;
+      outline: none;
+      font-family: "AVA", sans-serif;
+      font-size: var(--ava-tester-size, 72px);
+      font-variation-settings:
+        "TRIA" var(--ava-tester-tria, 50),
+        "STRC" var(--ava-tester-strc, 100),
+        "EXTD" var(--ava-tester-extd, 100);
+      letter-spacing: var(--ava-tester-spacing, 0px);
+      line-height: 0.95;
+      color: var(--ava-tester-color, #000);
+      overflow-wrap: anywhere;
+      text-transform: uppercase;
+    }
+
+    .ava-tester-text:focus {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.15em;
+    }
+
+    .ava-glyph-section {
+      flex-direction: column;
+      gap: clamp(0.45rem, 1.6vh, 1.25rem);
+      padding: clamp(4rem, 8vh, 6rem) clamp(1rem, 4vw, 4rem) clamp(2rem, 5vh, 4rem);
+      background: #fff;
+      color: #000;
+      font-family: "AVA", sans-serif;
+      overflow: hidden;
+    }
+
+    .ava-glyph-line {
+      display: block;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      line-height: 0.82;
+      font-size: min(6.2vw, 10vh);
+      font-variation-settings: "TRIA" 50, "STRC" 100, "EXTD" 100;
+      animation: avaGlyphAxes 9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+
+    @keyframes avaGlyphAxes {
+      0%,
+      8% {
+        font-variation-settings: "TRIA" 50, "STRC" 100, "EXTD" 100;
+      }
+
+      16% {
+        font-variation-settings: "TRIA" 50, "STRC" 100, "EXTD" 50;
+      }
+
+      26% {
+        font-variation-settings: "TRIA" 50, "STRC" 50, "EXTD" 50;
+      }
+
+      36% {
+        font-variation-settings: "TRIA" 50, "STRC" 50, "EXTD" 100;
+      }
+
+      46% {
+        font-variation-settings: "TRIA" 50, "STRC" 100, "EXTD" 100;
+      }
+
+      58% {
+        font-variation-settings: "TRIA" 100, "STRC" 100, "EXTD" 100;
+      }
+
+      68% {
+        font-variation-settings: "TRIA" 0, "STRC" 100, "EXTD" 100;
+      }
+
+      78% {
+        font-variation-settings: "TRIA" 0, "STRC" 1, "EXTD" 100;
+      }
+
+      88% {
+        font-variation-settings: "TRIA" 0, "STRC" 1, "EXTD" 50;
+      }
+
+      94% {
+        font-variation-settings: "TRIA" 50, "STRC" 1, "EXTD" 50;
+      }
+
+      100% {
+        font-variation-settings: "TRIA" 50, "STRC" 100, "EXTD" 100;
+      }
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: var(--grid-gap);
+      width: 100vw;
+      height: 100vh;
+      max-width: 100%;
+      max-height: 100%;
+      padding: 2vw;
+      align-items: stretch;
+      justify-items: center;
+    }
+
+    .word {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      align-self: stretch;
+      justify-self: stretch;
+      width: 100%;
+      height: 100%;
+      padding: 1vh 1vw;
+      font-size: var(--word-size);
+      line-height: 0.85;
+      text-transform: uppercase;
+      white-space: nowrap;
+      word-break: normal;
+      overflow: visible;
+      transition: font-variation-settings 0.25s ease;
+      cursor: text;
+      outline: none;
+      caret-color: transparent; /* custom caret drawn via JS */
+      text-align: left;
+    }
+
+    .work-section {
+      overflow: hidden;
+    }
+
+    .word.work {
+      font-variation-settings: 'TRIA' var(--work-tria), 'STRC' var(--work-strc), 'EXTD' var(--work-extd);
+      transform: translateY(var(--work-offset)) scale(var(--work-scale));
+    }
+
+    .custom-caret {
+      position: fixed;
+      width: 4px;
+      background: currentColor;
+      pointer-events: none;
+      z-index: 20;
+      animation: blink 1s steps(2, start) infinite;
+      display: none;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    .word.hard1 {
+      font-variation-settings: 'TRIA' var(--hard1-tria), 'STRC' var(--hard1-strc), 'EXTD' var(--hard1-extd);
+      justify-content: flex-end;
+      text-align: right;
+      transform: translateY(var(--hard1-offset)) scale(var(--hard1-scale));
+    }
+
+    .word.play {
+      font-variation-settings: 'TRIA' var(--play-tria), 'STRC' var(--play-strc), 'EXTD' var(--play-extd);
+      transform: translateY(var(--play-offset)) scale(var(--play-scale));
+    }
+
+    .word.hard2 {
+      font-variation-settings: 'TRIA' var(--hard2-tria), 'STRC' var(--hard2-strc), 'EXTD' var(--hard2-extd);
+      justify-content: flex-end;
+      text-align: right;
+      transform: translateY(var(--hard2-offset)) scale(var(--hard2-scale));
+    }
+
+    /* Slideshow */
+    .slideshow .slider {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2vw;
+      filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.25));
+    }
+
+    .slideshow .track {
+      display: flex;
+      align-items: center;
+      gap: 1.5vw;
+      animation: slideLoop 18s linear infinite;
+      animation-direction: alternate;
+      will-change: transform;
+    }
+
+    .slideshow .slide {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slideshow img {
+      display: block;
+      height: 85vh;
+      width: auto;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+      transition: filter 0.25s ease;
+    }
+
+    @keyframes slideLoop {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .slideshow .overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .slideshow .overlay.visible {
+      opacity: 0.9;
+    }
+
+    /* Video section */
+    .video-section {
+      position: relative;
+      overflow: hidden;
+      background: black;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-section video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Split image section */
+    .split-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+    }
+
+    .split-section img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Side-by-side videos */
+    .split-video-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+    }
+
+    .split-video-section video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      html,
+      body {
+        height: auto;
+        min-height: 100%;
+        scrollbar-gutter: auto;
+      }
+
+      body {
+        scroll-snap-type: y proximity;
+      }
+
+      .section {
+        width: 100%;
+        min-height: 100svh;
+        height: auto;
+        scroll-snap-align: start;
+        scroll-snap-stop: normal;
+      }
+
+      .ava-text {
+        width: 100%;
+        min-height: 100svh;
+        padding: 4.75rem 1rem 2rem;
+        line-height: 0.82;
+      }
+
+      .ava-text span {
+        width: 100%;
+        font-size: min(22vw, 18svh);
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .ava-tester-section {
+        min-height: 100svh;
+        padding: 4.75rem 1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+      }
+
+      .ava-tester-controls {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem 0.8rem;
+        margin-bottom: 1rem;
+        font-size: 0.68rem;
+      }
+
+      .ava-tester-control {
+        grid-template-rows: 0.8rem 1.75rem;
+      }
+
+      .ava-tester-control > span,
+      .ava-color-control > span {
+        font-size: 0.6rem;
+      }
+
+      .ava-tester-control output {
+        min-width: 2.7rem;
+      }
+
+      .ava-color-control {
+        grid-template-rows: 0.8rem 1.75rem;
+      }
+
+      .ava-color {
+        height: 1.75rem;
+        transform: none;
+      }
+
+      .ava-tester-text {
+        position: relative;
+        inset: auto;
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        padding: 0;
+        font-size: clamp(2.6rem, 15vw, 5rem);
+        line-height: 0.92;
+        overflow: auto;
+      }
+
+      .work-section {
+        min-height: 100svh;
+        padding: 4.75rem 1rem 1rem;
+      }
+
+      .work-grid {
+        width: 100%;
+        min-height: calc(100svh - 5.75rem);
+        height: auto;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, 1fr);
+        gap: 0.5rem;
+        padding: 0;
+      }
+
+      .word,
+      .word.work,
+      .word.hard1,
+      .word.play,
+      .word.hard2 {
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        font-size: clamp(4rem, 27vw, 8.5rem);
+        line-height: 0.82;
+        text-align: center;
+        transform: none;
+      }
+
+      .slideshow .slider {
+        min-height: 100svh;
+        padding: 4.75rem 1rem 1rem;
+      }
+
+      .slideshow .track {
+        gap: 1rem;
+        animation-duration: 24s;
+      }
+
+      .slideshow img {
+        width: 78vw;
+        height: auto;
+        max-height: 72svh;
+        object-fit: contain;
+        border-radius: 6px;
+      }
+
+      .video-section,
+      .split-section,
+      .split-video-section {
+        width: 100%;
+        min-height: 100svh;
+        height: auto;
+      }
+
+      .video-section video {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: 100svh;
+        object-fit: cover;
+      }
+
+      .split-section,
+      .split-video-section {
+        grid-template-columns: 1fr;
+      }
+
+      .split-section img,
+      .split-video-section video {
+        width: 100%;
+        height: 50svh;
+        object-fit: cover;
+      }
+    }
+
+
+  </style>
+</head>
+<body>
+  <script src="../../../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <div class="page">
+
+    <section class="section" style="background: url('../Portfolio_AVA_Pictures/AVA picture.jpg') center/cover no-repeat; color: white;">
+    <div class="ava-text" id="avaLanding">
+      <span>ACADEMY OF</span>
+      <span>VISUAL ARTS</span>
+      <span>FRANKFURT</span>
+    </div>
+  </section>
+
+  <section class="section ava-tester-section">
+    <div class="ava-tester-controls">
+      <label class="ava-tester-control">
+        <span>Size</span>
+        <input class="ava-tester-size" type="range" min="18" max="180" value="72">
+        <output>72px</output>
+      </label>
+      <label class="ava-tester-control">
+        <span>Spacing</span>
+        <input class="ava-tester-spacing" type="range" min="-10" max="20" step="0.5" value="0">
+        <output>0px</output>
+      </label>
+      <label class="ava-tester-control">
+        <span>TRIA</span>
+        <input class="ava-tester-tria" type="range" min="0" max="100" value="50">
+        <output>50</output>
+      </label>
+      <label class="ava-tester-control">
+        <span>STRC</span>
+        <input class="ava-tester-strc" type="range" min="1" max="100" value="100">
+        <output>100</output>
+      </label>
+      <label class="ava-tester-control">
+        <span>EXTD</span>
+        <input class="ava-tester-extd" type="range" min="50" max="100" value="100">
+        <output>100</output>
+      </label>
+      <label class="ava-color-control">
+        <span>Text Color</span>
+        <div class="ava-color ava-tester-color" role="slider" tabindex="0" aria-label="Text color" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <i class="ava-color-ring"></i>
+        </div>
+      </label>
+      <label class="ava-color-control">
+        <span>Background Color</span>
+        <div class="ava-color ava-tester-background" role="slider" tabindex="0" aria-label="Background color" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+          <i class="ava-color-ring"></i>
+        </div>
+      </label>
+    </div>
+    <div class="ava-tester-text" contenteditable="true" spellcheck="false">AVA IS A CUSTOM TYPEFACE THAT REFLECTS A SPIRIT OF EXPERIMENTATION AND TRANSFORMATION, SHIFTING BETWEEN CLARITY AND DISTORTION. IT IS A VARIABLE DISPLAY FONT BUILT ON GEOMETRIC FOUNDATIONS, CAPABLE OF STRETCHING, BENDING, AND SPIKING INTO EXPRESSIVE EXTREMES.</div>
+  </section>
+
+  <section class="section work-section" style="background: black; color: white;">
+    <div class="work-grid">
+      <div class="word work" contenteditable="true" spellcheck="false">Work</div>
+      <div class="word hard1" contenteditable="true" spellcheck="false">Hard</div>
+      <div class="word play" contenteditable="true" spellcheck="false">Play</div>
+      <div class="word hard2" contenteditable="true" spellcheck="false">Hard</div>
+    </div>
+  </section>
+
+  <section class="section slideshow" style="background: white; color: black;">
+    <div class="slider">
+      <div class="track">
+        <div class="slide"><img src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Stills/AVA_365.jpg" alt="AVA 365"></div>
+        <div class="slide"><img src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Stills/AVA_Inter_com_design.jpg" alt="AVA Inter Com Design"></div>
+        <div class="slide"><img src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Stills/AVA_Mode Kunst Design Changing.jpg" alt="AVA Mode Kunst Design Changing"></div>
+        <div class="slide"><img src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Stills/AVA_Process_progress.jpg" alt="AVA Process Progress"></div>
+      </div>
+    </div>
+  </section>
+
+    <section class="section video-section">
+      <video src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Video/ParcoFonts_PrettySweet_Video.mp4" autoplay muted loop playsinline></video>
+  </section>
+
+  <section class="section split-section">
+      <img src="../Portfolio_AVA_Specimens_OMG/Theinternet is dying 12OMG.png" alt="The Internet is dying 12OMG">
+      <img src="../Portfolio_AVA_Specimens_OMG/Theinternet is dying 13OMG.png" alt="The Internet is dying 13OMG">
+  </section>
+
+    <section class="section video-section">
+      <video src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Video/ParcoFonts_Frankfurt.mp4" autoplay muted loop playsinline></video>
+  </section>
+
+  <section class="section split-video-section">
+      <video autoplay muted loop playsinline>
+        <source src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Video/ParcoFonts_AVA_%23_BW_Animation.mp4" type="video/mp4">
+      </video>
+      <video src="../Portfolio_AVA_Specimens_Parco/Portfolio_AVA_Specimens_Parco_Video/ParcoFonts_AVA_N_Animation.mp4" autoplay muted loop playsinline></video>
+  </section>
+
+  <section class="section ava-glyph-section" aria-label="AVA glyph set">
+    <div class="ava-glyph-line">ABCDEFGHIJKL</div>
+    <div class="ava-glyph-line">MNOPQRSTUVWXYZ</div>
+    <div class="ava-glyph-line">0123456789</div>
+    <div class="ava-glyph-line">.,:;!?*()[]{}-_</div>
+  </section>
+
+  </div>
+
+  <script>
+    const landing = document.getElementById('avaLanding');
+    const infoSection = document.querySelector('.info-section');
+    const infoControlsEl = document.querySelector('.info-controls');
+    const words = [
+      { el: document.querySelector('.word.work'), triaVar: '--work-tria', scaleVar: '--work-scale' },
+      { el: document.querySelector('.word.hard1'), triaVar: '--hard1-tria', scaleVar: '--hard1-scale' },
+      { el: document.querySelector('.word.play'), triaVar: '--play-tria', scaleVar: '--play-scale' },
+      { el: document.querySelector('.word.hard2'), triaVar: '--hard2-tria', scaleVar: '--hard2-scale' }
+    ];
+    const baseTria = 50;
+    const infoControls = {
+      tria: document.getElementById('info-tria'),
+      strc: document.getElementById('info-strc'),
+      extd: document.getElementById('info-extd'),
+      triaVal: document.getElementById('info-tria-val'),
+      strcVal: document.getElementById('info-strc-val'),
+      extdVal: document.getElementById('info-extd-val')
+    };
+
+    function updateFontVariation(e) {
+      const x = e.clientX / window.innerWidth;
+      const extd = 50 + x * 50;
+      landing.style.fontVariationSettings = `'TRIA' 50, 'STRC' 50, 'EXTD' ${extd.toFixed(1)}`;
+    }
+
+    document.addEventListener('mousemove', updateFontVariation);
+    window.addEventListener('resize', () => {
+      landing.style.fontSize = window.innerHeight * 0.12 + 'px';
+    });
+
+    function bindSnapHover(el, varName) {
+      if (!el) return;
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+        const tria = ratio <= 0.5 ? 0 : 100;
+        document.documentElement.style.setProperty(varName, tria.toFixed(0));
+      });
+      el.addEventListener('mouseleave', () => {
+        document.documentElement.style.setProperty(varName, baseTria);
+      });
+    }
+
+    function updateScale(el, scaleVar) {
+      if (!el) return;
+      const availableW = el.clientWidth || 1;
+      const availableH = el.clientHeight || 1;
+      const neededW = el.scrollWidth || availableW;
+      const neededH = el.scrollHeight || availableH;
+      const ratio = Math.min(availableW / neededW, availableH / neededH);
+      const scale = Math.max(0.25, Math.min(1, ratio));
+      document.documentElement.style.setProperty(scaleVar, scale.toFixed(3));
+    }
+
+    words.forEach(({ el, triaVar, scaleVar }) => {
+      bindSnapHover(el, triaVar);
+      const syncScale = () => updateScale(el, scaleVar);
+      if (el) {
+        el.addEventListener('input', syncScale);
+        // slight delay for paste/render
+        el.addEventListener('keyup', syncScale);
+        syncScale();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      words.forEach(({ el, scaleVar }) => updateScale(el, scaleVar));
+    });
+
+    // Info sliders for TRIA/STRC/EXTD (section 2 only)
+    function bindInfoControls() {
+      if (!infoSection) return;
+      const infoBody = document.querySelector('.info-body');
+
+      const applyAll = () => {
+        const tria = infoControls.tria ? Number(infoControls.tria.value) : 50;
+        const strc = infoControls.strc ? Number(infoControls.strc.value) : 100;
+        const extd = infoControls.extd ? Number(infoControls.extd.value) : 100;
+        document.documentElement.style.setProperty('--info-tria', tria);
+        document.documentElement.style.setProperty('--info-strc', strc);
+        document.documentElement.style.setProperty('--info-extd', extd);
+        if (infoControls.triaVal) infoControls.triaVal.textContent = tria;
+        if (infoControls.strcVal) infoControls.strcVal.textContent = strc;
+        if (infoControls.extdVal) infoControls.extdVal.textContent = extd;
+        infoSection.style.fontVariationSettings = `'TRIA' ${tria}, 'STRC' ${strc}, 'EXTD' ${extd}`;
+        if (infoBody) infoBody.style.fontVariationSettings = `'TRIA' ${tria}, 'STRC' ${strc}, 'EXTD' ${extd}`;
+        updateInfoScale();
+      };
+      ['tria', 'strc', 'extd'].forEach((name) => {
+        const input = infoControls[name];
+        if (!input) return;
+        input.addEventListener('input', applyAll);
+      });
+      applyAll();
+    }
+    bindInfoControls();
+
+    function bindAvaTester() {
+      const section = document.querySelector('.ava-tester-section');
+      const text = section?.querySelector('.ava-tester-text');
+      if (!section || !text) return;
+
+      const controls = {
+        size: section.querySelector('.ava-tester-size'),
+        spacing: section.querySelector('.ava-tester-spacing'),
+        tria: section.querySelector('.ava-tester-tria'),
+        strc: section.querySelector('.ava-tester-strc'),
+        extd: section.querySelector('.ava-tester-extd'),
+        color: section.querySelector('.ava-tester-color'),
+        background: section.querySelector('.ava-tester-background')
+      };
+
+      const colorFromPosition = position => {
+        if (position <= 12) {
+          return `hsl(0 100% ${(position / 12) * 50}%)`;
+        }
+        if (position >= 88) {
+          return `hsl(0 100% ${50 + (((position - 88) / 12) * 50)}%)`;
+        }
+        return `hsl(${((position - 12) / 76) * 360} 100% 50%)`;
+      };
+
+      const update = () => {
+        const size = controls.size.value;
+        const spacing = controls.spacing.value;
+        const tria = controls.tria.value;
+        const strc = controls.strc.value;
+        const extd = controls.extd.value;
+
+        section.style.setProperty('--ava-tester-size', `${size}px`);
+        section.style.setProperty('--ava-tester-spacing', `${spacing}px`);
+        section.style.setProperty('--ava-tester-tria', tria);
+        section.style.setProperty('--ava-tester-strc', strc);
+        section.style.setProperty('--ava-tester-extd', extd);
+        section.style.setProperty('--ava-tester-color', controls.color.dataset.color || '#000');
+        section.style.setProperty('--ava-tester-background', controls.background.dataset.color || '#fff');
+
+        controls.size.nextElementSibling.textContent = `${size}px`;
+        controls.spacing.nextElementSibling.textContent = `${spacing}px`;
+        controls.tria.nextElementSibling.textContent = tria;
+        controls.strc.nextElementSibling.textContent = strc;
+        controls.extd.nextElementSibling.textContent = extd;
+      };
+
+      const setColorPosition = (control, position) => {
+        const clampedPosition = Math.min(100, Math.max(0, position));
+        control.dataset.color = colorFromPosition(clampedPosition);
+        control.style.setProperty('--color-position', `${clampedPosition}%`);
+        control.setAttribute('aria-valuenow', Math.round(clampedPosition));
+        update();
+      };
+
+      const wireColorControl = control => {
+        const setFromPointer = event => {
+          const rect = control.getBoundingClientRect();
+          setColorPosition(control, ((event.clientX - rect.left) / rect.width) * 100);
+        };
+
+        control.addEventListener('pointerdown', event => {
+          control.setPointerCapture(event.pointerId);
+          setFromPointer(event);
+        });
+        control.addEventListener('pointermove', event => {
+          if (control.hasPointerCapture(event.pointerId)) setFromPointer(event);
+        });
+        control.addEventListener('keydown', event => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          setColorPosition(control, Number(control.getAttribute('aria-valuenow')) + direction);
+        });
+      };
+
+      [controls.size, controls.spacing, controls.tria, controls.strc, controls.extd]
+        .forEach(control => control.addEventListener('input', update));
+      wireColorControl(controls.color);
+      wireColorControl(controls.background);
+      setColorPosition(controls.color, Number(controls.color.getAttribute('aria-valuenow')));
+      setColorPosition(controls.background, Number(controls.background.getAttribute('aria-valuenow')));
+    }
+    bindAvaTester();
+
+    // Scale info body to keep it fully visible within section
+    const infoBody = document.querySelector('.info-body');
+    function updateInfoScale() {
+      if (!infoSection || !infoBody) return;
+      const controlsH = infoControlsEl ? infoControlsEl.offsetHeight + 24 : 0;
+      const availableW = infoSection.clientWidth || 1;
+      const availableH = (infoSection.clientHeight || 1) - controlsH;
+      const neededW = infoBody.scrollWidth || availableW;
+      const neededH = infoBody.scrollHeight || availableH;
+      const ratio = Math.min(availableW / neededW, availableH / neededH);
+      const scale = Math.max(0.3, Math.min(1, ratio));
+      document.documentElement.style.setProperty('--info-scale', scale.toFixed(3));
+    }
+    ['input', 'keyup'].forEach(evt => {
+      if (infoBody) infoBody.addEventListener(evt, updateInfoScale);
+    });
+    window.addEventListener('resize', updateInfoScale);
+    updateInfoScale();
+
+    // Continuous slideshow: duplicate slides and let CSS keyframes run nonstop
+    const track = document.querySelector('.slideshow .track');
+    if (track) {
+      const slides = Array.from(track.children);
+      slides.forEach((s) => track.appendChild(s.cloneNode(true)));
+      const restartAnimation = () => {
+        track.style.animation = 'none';
+        void track.offsetHeight; // force reflow
+        track.style.animation = ''; // revert to CSS (slideLoop)
+      };
+      restartAnimation();
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) restartAnimation();
+      });
+    }
+
+    window.addEventListener('resize', () => {
+      if (!track) return;
+      track.style.transform = 'translateX(0px)';
+    });
+
+    // Custom caret approximating cap-height to baseline for editable words
+    const caretEl = document.createElement('div');
+    caretEl.className = 'custom-caret';
+    document.body.appendChild(caretEl);
+
+    const isInWord = (node) => {
+      let n = node;
+      while (n) {
+        if (n.classList && n.classList.contains('word')) return n;
+        n = n.parentNode;
+      }
+      return null;
+    };
+
+    const updateCaret = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) {
+        caretEl.style.display = 'none';
+        return;
+      }
+      const wordEl = isInWord(sel.anchorNode);
+      if (!wordEl) {
+        caretEl.style.display = 'none';
+        return;
+      }
+
+      const range = sel.getRangeAt(0).cloneRange();
+      let rect = range.getBoundingClientRect();
+
+      // If rect is empty (e.g., at start), insert temp marker to measure
+      if (!rect || (rect.width === 0 && rect.height === 0)) {
+        const marker = document.createElement('span');
+        marker.textContent = '\u200b';
+        range.insertNode(marker);
+        range.selectNode(marker);
+        rect = marker.getBoundingClientRect();
+        marker.remove();
+      }
+
+      if (!rect || (rect.width === 0 && rect.height === 0)) {
+        caretEl.style.display = 'none';
+        return;
+      }
+
+      const fontSize = parseFloat(getComputedStyle(wordEl).fontSize) || rect.height;
+      const capHeight = fontSize * 0.7;
+      const baselineOffset = fontSize * 0.2;
+      const top = rect.bottom - baselineOffset - capHeight;
+
+      caretEl.style.left = `${rect.left}px`;
+      caretEl.style.top = `${top}px`;
+      caretEl.style.height = `${capHeight}px`;
+      caretEl.style.background = getComputedStyle(wordEl).color;
+      caretEl.style.display = 'block';
+    };
+
+    ['selectionchange', 'keyup', 'mouseup', 'input', 'focus', 'blur'].forEach(evt => {
+      document.addEventListener(evt, updateCaret, true);
+    });
+    window.addEventListener('resize', updateCaret);
+
+    function hideCaretOnScroll() {
+      caretEl.style.display = 'none';
+      const active = document.activeElement;
+      if (active && active.classList && active.classList.contains('word')) {
+        active.blur();
+      }
+    }
+
+    window.addEventListener('scroll', hideCaretOnScroll, { passive: true });
+
+    // Keep the current section pinned in view on resize to avoid peeking other pages.
+    const sections = Array.from(document.querySelectorAll('.section'));
+    let activeSection = sections[0];
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+          activeSection = entry.target;
+        }
+      });
+    }, { threshold: [0.6, 0.75, 1] });
+
+    sections.forEach((sec) => observer.observe(sec));
+
+    window.addEventListener('resize', () => {
+      if (window.matchMedia('(max-width: 768px)').matches) return;
+      if (activeSection) {
+        activeSection.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    });
+
+    // Slideshow click: force a duotone-like remap by hue-shifting the image colors to a random target.
+    function randomHue(prev) {
+      let h = prev || 0;
+      let diff = 0;
+      while (diff < 30) {
+        h = Math.floor(Math.random() * 360);
+        diff = Math.abs(h - (prev || 0));
+        if (diff > 180) diff = 360 - diff;
+      }
+      return h;
+    }
+
+    document.querySelectorAll('.slideshow img').forEach(img => {
+      let lastHue = 0;
+      img.addEventListener('mouseenter', () => {
+        lastHue = randomHue(lastHue);
+        img.style.filter = `grayscale(0) contrast(0.5) sepia(2) hue-rotate(${lastHue}deg) saturate(5) brightness(0.9)`;
+      });
+      img.addEventListener('mouseleave', () => {
+        img.style.filter = 'none';
+      });
+    });
+
+    const avaTesterSection = document.querySelector('.ava-tester-section');
+    const page = document.querySelector('.page');
+    if (avaTesterSection && page) {
+      page.appendChild(avaTesterSection);
+    }
+
+  </script>
+
+  <script src="../../../Portfolio_General_Items_Assets/project-description.js"></script>
+</body>
+</html>

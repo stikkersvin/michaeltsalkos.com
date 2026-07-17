@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Fonts – Michael Tsalkos</title>
+  <style>
+    @font-face {
+      font-family: 'FontRunnersRegular';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-Regular.otf?v=20260611-211227') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'FontRunnersMedium';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-Medium.otf?v=20260611-211227') format('opentype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'FontRunnersBold';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-Bold.otf?v=20260611-211227') format('opentype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'FontRunnersTightenUp';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-TightenUp.otf?v=20260611-211227') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'FontRunnersCorrection';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-Correction.otf?v=20260611-211227') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'FontRunnersRawData';
+      src: url('../Portfolio_FontRunners/Font_Runners_Export_Test_OTF/FontRunners-testfile-RawData.otf?v=20260611-211227') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'AVA';
+      src: url('../Portfolio_AVA/Portfolio_AVA_Font/AVA-VariableVF.woff2') format('woff2');
+      font-weight: 1 1000;
+      font-stretch: 0% 200%;
+    }
+    @font-face {
+      font-family: 'NeueNight';
+      src:
+        url('../Portfolio_NeueNight/Portfolio_NEUENIGHT_Font/NeueNight1-VariableVF.woff2') format('woff2'),
+        url('../Portfolio_NeueNight/Portfolio_NEUENIGHT_Font/NeueNight-VariableVF.woff') format('woff');
+      font-weight: 1 1000;
+      font-stretch: 0% 200%;
+    }
+    @font-face {
+      font-family: 'MagneteRegular';
+      src: url('../Portfolio_Magnete/Portfolio_Magnete_Font/Magnete-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Reak';
+      src: url('../Portfolio_Reak/Portfolio_Reak_Font/Reak1-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'MagneteRounded';
+      src: url('../Portfolio_Magnete/Portfolio_Magnete_Font/Magnete-Rounded.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Ceramica';
+      src: url('../Portfolio_Ceramica/Portfolio_Ceramica_Font/Ceramicadone.otf') format('opentype');
+      font-weight: 400;
+      font-style: normal;
+    }
+  </style>
+  <link rel="stylesheet" href="../../Portfolio_General_Items_Assets/topbar.css" />
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    :root { --bg:#fff; }
+    body.dark { --bg:#000; color:#fff; }
+
+    body {
+      min-height:100vh;
+      display:flex; flex-direction:column; justify-content:center; align-items:center;
+      background:var(--bg); color:#000;
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      overflow:hidden;
+      transition: background .3s ease, color .3s ease;
+      isolation:isolate; position:relative;
+    }
+
+    body::before{
+      content:""; position:fixed; inset:0; background:var(--bg);
+      z-index:0; pointer-events:none;
+    }
+
+    /* fonts list */
+    .fonts-page {
+      width:100%;
+      margin:0;
+      padding:calc(6rem + 10px) 1.5rem 4rem;
+      display:flex;
+      flex-direction:column;
+      gap:2.5rem;
+      position:relative;
+      z-index:1;
+      margin-top:3.5rem; /* space from fixed top bar */
+      height:calc(100vh - 3.5rem);
+      overflow-y:auto;
+      scroll-snap-type:y mandatory;
+      scroll-snap-stop:always;
+      scroll-behavior:smooth;
+    }
+
+    .font-row {
+      border-bottom:1px solid currentColor;
+      padding:0.6rem 0 0.4rem;
+      display:grid;
+      grid-template-columns: minmax(0,2.6fr) minmax(260px,1fr);
+      align-items:center;
+      gap:0.6rem;
+      width:100%;
+      scroll-snap-align:start;
+    }
+
+    .font-left {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:0.3rem;
+      justify-content:center;
+    }
+
+    .font-name {
+      display:block;
+      font-size: clamp(32px, 9vw, 110px);
+      font-weight:500;
+      letter-spacing:-0.03em;
+      text-transform:uppercase;
+      line-height:0.9;
+      color:inherit;
+      text-decoration:none;
+      cursor:text;
+      outline:none;
+      min-width:1ch;
+      max-width:100%;
+      padding-right:1.5rem;
+      margin-right:-1.5rem;
+      overflow-wrap:anywhere;
+      user-select:text;
+      -webkit-user-select:text;
+    }
+
+    a.font-name:not([contenteditable="true"]) {
+      cursor:pointer;
+    }
+
+    .font-name:focus {
+      text-decoration:underline;
+      text-decoration-thickness:1px;
+      text-underline-offset:0.12em;
+    }
+
+    .use-ava-font {
+      font-family:'AVA', sans-serif;
+      font-variation-settings:'TRIA' 50, 'STRC' 50, 'EXTD' 100;
+      letter-spacing:0.01em; /* 1% */
+      transition: font-variation-settings 0.65s ease, letter-spacing 0.65s ease;
+    }
+
+    .use-fontrunners-font {
+      font-family:'FontRunnersRawData', sans-serif;
+      letter-spacing:0.01em;
+      font-weight:400;
+    }
+
+    .use-neuenight-font {
+      font-family:'NeueNight', sans-serif;
+      letter-spacing:0.01em;
+      transition: font-variation-settings 0.65s ease, font-weight 0.65s ease, letter-spacing 0.65s ease;
+      font-variation-settings:'wght' 400, 'SPKS' 100;
+      font-weight:400;
+    }
+
+    .use-magnete-font {
+      font-family:'MagneteRegular', sans-serif;
+      letter-spacing:0.01em;
+      transition: letter-spacing 0.65s ease, font-weight 0.65s ease;
+      font-weight:400;
+    }
+
+    .use-reak-font {
+      font-family:'Reak', sans-serif;
+      letter-spacing:0.01em;
+      font-weight:700;
+    }
+    .use-ceramica-font {
+      font-family:'Ceramica', sans-serif;
+      letter-spacing:-0.01em;
+      font-weight:400;
+    }
+
+    .use-fontrunners-font::selection { background:#2563eb; color:#fff; }
+    .use-ava-font::selection { background:#e00; color:#fff; }
+    .use-neuenight-font::selection { background:#00ff5f; color:#000; }
+    .use-reak-font::selection { background:#8b5a2b; color:#fff; }
+    .use-magnete-font::selection { background:#ff3fb4; color:#fff; }
+    .use-ceramica-font::selection { background:#e00; color:#fff; }
+
+    .font-sub {
+      font-size:0.75rem;
+      opacity:0.4;
+      letter-spacing:0.01em;
+    }
+
+    .font-meta {
+      display:flex;
+      align-items:center;
+      gap:0.55rem;
+      font-size:0.75rem;
+      letter-spacing:0.01em;
+    }
+
+    .font-meta .font-sub {
+      opacity:0.4;
+    }
+
+    .font-open-link {
+      color:inherit;
+      opacity:0.4;
+      text-decoration:none;
+    }
+
+    .font-open-link:hover,
+    .font-open-link:focus-visible {
+      opacity:1;
+      text-decoration:underline;
+    }
+
+    .font-styles {
+      display:flex;
+      justify-content:flex-start;
+      gap:0.4rem;
+      flex-wrap:wrap;
+      font-size:0.8rem;
+      align-items:center;
+      width:100%;
+      text-align:left;
+      align-self:flex-start;
+    }
+
+    .pill {
+      display:inline-flex;
+      align-items:center;
+      padding:0.28rem 0.6rem;
+      border-radius:999px;
+      background:#e00;
+      color:#fff;
+      font-weight:700;
+      font-size:0.7rem;
+      text-transform:uppercase;
+      letter-spacing:0.03em;
+      line-height:1;
+    }
+
+    .font-styles span:not(.pill) {
+      opacity:0.4;
+    }
+
+    /* weight buttons (first section) */
+    .weight-btn {
+      border:none;
+      background:transparent;
+      padding:0.2rem 0.35rem;
+      font:inherit;
+      color:inherit;
+      cursor:pointer;
+      position:relative;
+      transition:opacity 0.2s ease, color 0.2s ease;
+    }
+    .weight-btn:hover { opacity:0.7; }
+    .weight-btn.active {
+      color:#fff;
+      text-transform:uppercase;
+    }
+    .weight-btn.active::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      background:#e00;
+      z-index:-1;
+    }
+
+    /* neon green for Neue Night active */
+    .weight-btn-neuenight.active::before {
+      background:#00ff5f;
+      box-shadow:0 0 12px rgba(0,255,95,0.65);
+    }
+
+    /* brown pill for REAK */
+    .weight-btn-reak.active::before {
+      background:#8b5a2b;
+      box-shadow:0 0 10px rgba(139,90,43,0.55);
+    }
+
+    /* pink pill for Magnete */
+    .weight-btn-magnete.active::before {
+      background:#ff3fb4;
+      box-shadow:0 0 12px rgba(255,63,180,0.55);
+    }
+
+    .weight-btn-fontrunners.active::before {
+      background:#2563eb;
+      box-shadow:0 0 12px rgba(37,99,235,0.55);
+    }
+    .font-right {
+      justify-self:end;
+      text-align:right;
+      font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size:0.8rem;
+      line-height:1.3;
+      display:flex;
+      flex-direction:column;
+      gap:0.35rem;
+      align-items:flex-end;
+      justify-content:center;
+    }
+    .font-right b { display:inline-block; min-width:110px; text-align:right; }
+
+    @media (max-width:768px){
+      .fonts-page {
+        height:100svh;
+        margin-top:0;
+        padding:calc(env(safe-area-inset-top) + 5rem) 1rem 1rem;
+        gap:0;
+        scroll-snap-type:none;
+      }
+      .font-row {
+        grid-template-columns:1fr;
+        min-height:calc((100svh - 6rem) / 2);
+        padding:1rem 0;
+        gap:0.85rem;
+        place-items:center;
+        text-align:center;
+        scroll-snap-align:none;
+      }
+      .font-left {
+        align-items:center;
+        text-align:center;
+        width:100%;
+      }
+      .font-name {
+        width:100%;
+        padding-right:0;
+        margin-right:0;
+        font-size:clamp(3.4rem, 18vw, 6.8rem);
+        text-align:center;
+      }
+      .use-ava-font,
+      .use-neuenight-font,
+      .use-reak-font,
+      .use-ceramica-font {
+        font-size:clamp(4.6rem, 24vw, 8.5rem);
+      }
+      .font-meta {
+        justify-content:center;
+        flex-wrap:wrap;
+      }
+      .font-open-link {
+        display:none;
+      }
+      .font-styles {
+        justify-content:center;
+        align-self:center;
+        text-align:center;
+      }
+      .font-right {
+        display:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="fonts-page">
+    <section class="font-row">
+      <div class="font-left">
+        <a class="font-name use-fontrunners-font" href="../Portfolio_FontRunners/FontRunners.html" contenteditable="true" spellcheck="false" data-default-text="FONT RUNNERS" aria-label="Type your own Font Runners specimen">FONT RUNNERS</a>
+        <div class="font-meta">
+          <div class="font-sub">FONT RUNNERS · Click above to type</div>
+          <a class="font-open-link" href="../Portfolio_FontRunners/FontRunners.html">View font ↗</a>
+        </div>
+        <div class="font-styles">
+          <button class="weight-btn weight-btn-fontrunners active" data-weight="raw-data">Raw Data</button>
+          <button class="weight-btn weight-btn-fontrunners" data-weight="correction">Correction</button>
+          <button class="weight-btn weight-btn-fontrunners" data-weight="tighten-up">Tighten Up</button>
+          <button class="weight-btn weight-btn-fontrunners" data-weight="regular">Regular</button>
+          <button class="weight-btn weight-btn-fontrunners" data-weight="medium">Medium</button>
+          <button class="weight-btn weight-btn-fontrunners" data-weight="bold">Bold</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>In development</div>
+        <div><b>🔠 Glyph Count:</b><br>—</div>
+        <div><b>📂 Formats:</b><br>OTF</div>
+        <div><b>📜 License:</b><br>Not specified</div>
+      </div>
+    </section>
+
+    <section class="font-row">
+      <div class="font-left">
+        <a class="font-name use-ava-font" href="../Portfolio_AVA/Portfolio_AVA_HTML/ava1.html" contenteditable="true" spellcheck="false" data-default-text="AVA" aria-label="Type your own AVA specimen">AVA</a>
+        <div class="font-meta">
+          <div class="font-sub">AVA Variable · Click above to type</div>
+          <a class="font-open-link" href="../Portfolio_AVA/Portfolio_AVA_HTML/ava1.html">View font ↗</a>
+        </div>
+        <div class="font-styles">
+          <button class="weight-btn" data-weight="regular">Regular</button>
+          <button class="weight-btn" data-weight="compressed">Compressed</button>
+          <button class="weight-btn" data-weight="stretched">Stretched</button>
+          <button class="weight-btn active" data-weight="extended">Extended</button>
+          <button class="weight-btn" data-weight="triangle-left">Triangle Left</button>
+          <button class="weight-btn" data-weight="triangle-right">Triangle Right</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>2022</div>
+        <div><b>🔠 Glyph Count:</b><br>122</div>
+        <div><b>📂 Formats:</b><br>TTF, WOFF &amp; WOFF2</div>
+        <div><b>📜 License:</b><br>Available from <a href="https://frakas.design/" target="_blank" rel="noopener noreferrer">frakas.design</a></div>
+      </div>
+    </section>
+
+    <section class="font-row">
+      <div class="font-left">
+        <a class="font-name use-neuenight-font" href="../Portfolio_NeueNight/Portfolio_NEUENIGHT_HTML/neuenight.html" contenteditable="true" spellcheck="false" data-default-text="Neue Night" aria-label="Type your own Neue Night specimen">Neue Night</a>
+        <div class="font-meta">
+          <div class="font-sub">Neue Night Variable · Click above to type</div>
+          <a class="font-open-link" href="../Portfolio_NeueNight/Portfolio_NEUENIGHT_HTML/neuenight.html">View font ↗</a>
+        </div>
+        <div class="font-styles">
+          <button class="weight-btn weight-btn-neuenight active" data-weight="regular">Regular</button>
+          <button class="weight-btn weight-btn-neuenight" data-weight="condensed">Condensed</button>
+          <button class="weight-btn weight-btn-neuenight" data-weight="regular-spikes">Regular Spikes</button>
+          <button class="weight-btn weight-btn-neuenight" data-weight="condensed-spikes">Condensed Spikes</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>2022</div>
+        <div><b>🔠 Glyph Count:</b><br>123</div>
+        <div><b>📂 Formats:</b><br>TTF, WOFF &amp; WOFF2</div>
+        <div><b>📜 License:</b><br>Free &amp; Comercial</div>
+      </div>
+    </section>
+
+    <section class="font-row">
+      <div class="font-left">
+        <a class="font-name use-reak-font" href="../Portfolio_Reak/Portfolio_Reak_HTML/reak.html" contenteditable="true" spellcheck="false" data-default-text="REAK" aria-label="Type your own REAK specimen">REAK</a>
+        <div class="font-meta">
+          <div class="font-sub">REAK Bold · Click above to type</div>
+          <a class="font-open-link" href="../Portfolio_Reak/Portfolio_Reak_HTML/reak.html">View font ↗</a>
+        </div>
+        <div class="font-styles">
+          <button class="weight-btn weight-btn-reak active" data-weight="bold">Bold</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>2022</div>
+        <div><b>🔠 Glyph Count:</b><br>123</div>
+        <div><b>📂 Formats:</b><br>TTF, WOFF &amp; WOFF2</div>
+        <div><b>📜 License:</b><br>Free &amp; Comercial</div>
+      </div>
+    </section>
+
+    <section class="font-row">
+      <div class="font-left">
+        <div class="font-name use-magnete-font" contenteditable="true" spellcheck="false" data-default-text="Magnete" role="textbox" aria-label="Type your own Magnete specimen">Magnete</div>
+        <div class="font-sub">Magnete · Click above to type</div>
+        <div class="font-styles">
+          <button class="weight-btn weight-btn-magnete active" data-weight="regular">Regular</button>
+          <button class="weight-btn weight-btn-magnete" data-weight="rounded">Rounded</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>2022</div>
+        <div><b>🔠 Glyph Count:</b><br>103</div>
+        <div><b>📂 Formats:</b><br>TTF, WOFF &amp; WOFF2</div>
+        <div><b>📜 License:</b><br>Available from <a href="https://frakas.design/" target="_blank" rel="noopener noreferrer">frakas.design</a></div>
+      </div>
+    </section>
+
+    <section class="font-row">
+      <div class="font-left">
+        <a class="font-name use-ceramica-font" href="../Portfolio_Ceramica/Portfolio_Ceramica_HTML/ceramica.html" contenteditable="true" spellcheck="false" data-default-text="Ceramica" aria-label="Type your own Ceramica specimen">Ceramica</a>
+        <div class="font-meta">
+          <div class="font-sub">Ceramica · Click above to type</div>
+        </div>
+        <div class="font-styles">
+          <button class="weight-btn weight-btn-ceramica active" data-weight="regular">Regular</button>
+        </div>
+      </div>
+      <div class="font-right">
+        <div><b>📅 Release Date:</b><br>2023</div>
+        <div><b>🔠 Glyph Count:</b><br>123</div>
+        <div><b>📂 Formats:</b><br>OTF</div>
+        <div><b>📜 License:</b><br>Free &amp; Comercial</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Editable specimen names. Dedicated "View font" links handle navigation.
+    (function(){
+      const specimens = Array.from(document.querySelectorAll('.font-name[contenteditable="true"]'));
+      const mobileQuery = window.matchMedia('(max-width: 768px)');
+      let syncingSpecimens = false;
+
+      function syncMobileSpecimens(source){
+        if(!mobileQuery.matches || syncingSpecimens) return;
+        const text = source.textContent;
+        syncingSpecimens = true;
+        specimens.forEach(specimen => {
+          if(specimen !== source) specimen.textContent = text;
+        });
+        syncingSpecimens = false;
+      }
+
+      specimens.forEach(specimen => {
+        specimen.addEventListener('click', event => {
+          if(specimen.tagName === 'A') event.preventDefault();
+        });
+
+        specimen.addEventListener('keydown', event => {
+          if(event.key === 'Enter'){
+            event.preventDefault();
+            specimen.blur();
+          }
+
+          if(event.key === 'Escape'){
+            specimen.textContent = specimen.dataset.defaultText;
+            syncMobileSpecimens(specimen);
+            specimen.blur();
+          }
+        });
+
+        specimen.addEventListener('input', () => {
+          syncMobileSpecimens(specimen);
+        });
+
+        specimen.addEventListener('blur', () => {
+          if(!specimen.textContent.trim()){
+            specimen.textContent = specimen.dataset.defaultText;
+            syncMobileSpecimens(specimen);
+          }
+        });
+      });
+    })();
+
+    // FontRunners style toggles
+    (function(){
+      const fontRunners = document.querySelector('.font-name.use-fontrunners-font');
+      if(!fontRunners) return;
+      const row = fontRunners.closest('.font-row');
+      const buttons = Array.from(row.querySelectorAll('.weight-btn-fontrunners'));
+      if(!buttons.length) return;
+      buttons.forEach(btn => {
+        if(!btn.dataset.label){ btn.dataset.label = btn.textContent.trim(); }
+      });
+
+      const styles = {
+        'raw-data': { family:'FontRunnersRawData', weight:400 },
+        correction: { family:'FontRunnersCorrection', weight:400 },
+        'tighten-up': { family:'FontRunnersTightenUp', weight:400 },
+        regular: { family:'FontRunnersRegular', weight:400 },
+        medium: { family:'FontRunnersMedium', weight:500 },
+        bold: { family:'FontRunnersBold', weight:700 },
+      };
+
+      function applyStyle(key){
+        const style = styles[key];
+        if(!style) return;
+        fontRunners.style.fontFamily = `${style.family}, sans-serif`;
+        fontRunners.style.fontWeight = style.weight;
+        fontRunners.style.fontFeatureSettings = 'normal';
+        fontRunners.style.fontVariantAlternates = 'normal';
+        buttons.forEach(btn => {
+          const active = btn.dataset.weight === key;
+          btn.classList.toggle('active', active);
+          const base = btn.dataset.label || btn.textContent.trim();
+          btn.textContent = active ? base.toUpperCase() : base;
+        });
+      }
+
+      buttons.forEach(btn => {
+        const handler = () => applyStyle(btn.dataset.weight);
+        btn.addEventListener('mouseenter', handler);
+        btn.addEventListener('click', handler);
+        btn.addEventListener('focus', handler);
+      });
+
+      applyStyle('raw-data');
+    })();
+
+    // Weight toggles for AVA
+    (function(){
+      const ava = document.querySelector('.font-name.use-ava-font');
+      if(!ava) return;
+      const avaRow = ava.closest('.font-row');
+      const buttons = Array.from(avaRow.querySelectorAll('.weight-btn'));
+      if(!ava || !buttons.length) return;
+      buttons.forEach(btn => {
+        if(!btn.dataset.label){ btn.dataset.label = btn.textContent.trim(); }
+      });
+
+      const weights = {
+        regular: { TRIA:50, STRC:50, EXTD:50 },
+        compressed: { TRIA:50, STRC:1, EXTD:50 },
+        stretched: { TRIA:50, STRC:50, EXTD:85 },
+        extended: { TRIA:50, STRC:50, EXTD:100 },
+        'triangle-left': { TRIA:0, STRC:50, EXTD:50 },
+        'triangle-right': { TRIA:100, STRC:50, EXTD:50 },
+      };
+
+      function applyWeight(key){
+        const axes = weights[key];
+        if(!axes) return;
+        ava.style.fontVariationSettings = `'TRIA' ${axes.TRIA}, 'STRC' ${axes.STRC}, 'EXTD' ${axes.EXTD}`;
+        buttons.forEach(btn => {
+          const active = btn.dataset.weight === key;
+          btn.classList.toggle('active', active);
+          const base = btn.dataset.label || btn.textContent.trim();
+          btn.textContent = active ? base.toUpperCase() : base;
+        });
+      }
+
+      // Hover triggers weight change; click remains as fallback (touch/keyboard)
+      buttons.forEach(btn => {
+        const handler = () => applyWeight(btn.dataset.weight);
+        btn.addEventListener('mouseenter', handler);
+        btn.addEventListener('click', handler);
+        btn.addEventListener('focus', handler);
+      });
+
+      // set initial state
+      applyWeight('extended');
+    })();
+
+    // Weight toggles for Neue Night
+    (function(){
+      const nn = document.querySelector('.font-name.use-neuenight-font');
+      if(!nn) return;
+      const nnRow = nn.closest('.font-row');
+      const buttons = Array.from(nnRow.querySelectorAll('.weight-btn-neuenight'));
+      if(!nn || !buttons.length) return;
+      buttons.forEach(btn => {
+        if(!btn.dataset.label){ btn.dataset.label = btn.textContent.trim(); }
+      });
+
+      const weights = {
+        regular: { wght:400, SPKS:100, label:'Regular' },
+        condensed: { wght:700, SPKS:100, label:'Condensed' },
+        'regular-spikes': { wght:400, SPKS:800, label:'Regular Spikes' },
+        'condensed-spikes': { wght:700, SPKS:800, label:'Condensed Spikes' },
+      };
+
+      function applyWeight(key){
+        const axes = weights[key];
+        if(!axes) return;
+        nn.style.fontVariationSettings = `'wght' ${axes.wght}, 'SPKS' ${axes.SPKS}`;
+        nn.style.fontWeight = axes.wght;
+        buttons.forEach(btn => {
+          const active = btn.dataset.weight === key;
+          btn.classList.toggle('active', active);
+          const base = btn.dataset.label || btn.textContent.trim();
+          btn.textContent = active ? base.toUpperCase() : base;
+        });
+      }
+
+      buttons.forEach(btn => {
+        const handler = () => applyWeight(btn.dataset.weight);
+        btn.addEventListener('mouseenter', handler);
+        btn.addEventListener('click', handler);
+        btn.addEventListener('focus', handler);
+      });
+
+      applyWeight('regular');
+    })();
+
+    // Weight toggles for Magnete
+    (function(){
+      const mag = document.querySelector('.font-name.use-magnete-font');
+      if(!mag) return;
+      const magRow = mag.closest('.font-row');
+      const buttons = Array.from(magRow.querySelectorAll('.weight-btn-magnete'));
+      if(!mag || !buttons.length) return;
+      buttons.forEach(btn => {
+        if(!btn.dataset.label){ btn.dataset.label = btn.textContent.trim(); }
+      });
+
+      const weights = {
+        regular: { family:'MagneteRegular', label:'Regular', weight:400 },
+        rounded: { family:'MagneteRounded', label:'Rounded', weight:700 },
+      };
+
+      function applyWeight(key){
+        const cfg = weights[key];
+        if(!cfg) return;
+        mag.style.fontFamily = `${cfg.family}, sans-serif`;
+        if(cfg.weight){ mag.style.fontWeight = cfg.weight; }
+        buttons.forEach(btn => {
+          const active = btn.dataset.weight === key;
+          btn.classList.toggle('active', active);
+          const base = btn.dataset.label || btn.textContent.trim();
+          btn.textContent = active ? base.toUpperCase() : base;
+        });
+      }
+
+      buttons.forEach(btn => {
+        const handler = () => applyWeight(btn.dataset.weight);
+        btn.addEventListener('mouseenter', handler);
+        btn.addEventListener('click', handler);
+        btn.addEventListener('focus', handler);
+      });
+
+      applyWeight('regular');
+    })();
+
+    // Static hook for REAK (third block, single weight)
+    (function(){
+      const reak = document.querySelector('.font-name.use-reak-font');
+      const btn = document.querySelector('.weight-btn-reak');
+      if(!reak || !btn) return;
+      // No dynamic toggle; the button is just for pill styling
+    })();
+
+  </script>
+
+  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
+</body>
+</html>

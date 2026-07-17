@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>First Things First*(2026)</title>
+  <link rel="stylesheet" href="../../Portfolio_General_Items_Assets/topbar.css" />
+  <style>
+    :root {
+      --page: #fff;
+      --ink: #0a0a0a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark {
+      --page: #080808;
+      --ink: #f5f5f5;
+    }
+
+    main {
+      padding: 6.5rem 1.5rem 1.5rem;
+      height: 100svh;
+      overflow: hidden;
+    }
+
+    .project-description {
+      position: fixed;
+      top: 6.5rem;
+      left: 1.5rem;
+      z-index: 10;
+      width: calc((100% - 4.5rem) / 4);
+      max-height: calc(100svh - 8rem);
+      overflow-y: auto;
+      background: var(--page);
+      color: var(--ink);
+      font-size: 0.9rem;
+      line-height: 1.25;
+    }
+
+    .description-title,
+    .description-details-title {
+      font-size: inherit;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .description-text {
+      margin-top: 0.75rem;
+    }
+
+    .description-details {
+      margin-top: 1.5rem;
+    }
+
+    .description-details-title {
+      margin-bottom: 0.5rem;
+    }
+
+    .description-detail {
+      padding: 0.4rem 0;
+      border-top: 1px solid currentColor;
+    }
+
+    .description-body {
+      margin-top: 1.5rem;
+    }
+
+    .description-body p {
+      margin-bottom: 0.65em;
+    }
+
+    .project-gallery {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+      height: calc(100svh - 8rem);
+      overflow: hidden;
+    }
+
+    .column-two-media {
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: calc(100svh - 8rem);
+      overflow-y: auto;
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: auto;
+    }
+
+    .secondary-image {
+      grid-column: 3 / 5;
+      height: calc(100svh - 8rem);
+      overflow-y: auto;
+    }
+
+    img,
+    video {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      transition: filter 0.3s ease;
+    }
+
+    .project-video {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      container-type: inline-size;
+      cursor: pointer;
+    }
+
+    .project-video video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: auto;
+      height: 100cqw;
+      max-height: none;
+      max-width: none;
+      transform: translate(-50%, -50%) rotate(90deg);
+      object-fit: contain;
+    }
+
+    body.dark img,
+    body.dark video {
+      filter: invert(1);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+      }
+
+      main {
+        height: auto;
+        padding: 5.5rem 1rem 1rem;
+        overflow: visible;
+      }
+
+      .project-description {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-bottom: 3rem;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .project-gallery {
+        display: block;
+        height: auto;
+        overflow: visible;
+      }
+
+      .column-two-media {
+        display: block;
+        height: auto;
+        overflow: visible;
+      }
+
+      .hero-image img {
+        max-height: none;
+      }
+
+      .project-video {
+        margin-top: 1.5rem;
+      }
+
+      .secondary-image {
+        height: auto;
+        overflow: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <aside class="project-description">
+    <div class="description-title">Description</div>
+    <p class="description-text">First Things First*(2026) revisits the original text by Ken Garland(1964) and contextualizes the piece in a new format, context and century.</p>
+    <div class="description-details">
+      <div class="description-details-title">Details</div>
+      <div class="description-detail">Year:<br>2026 mar</div>
+      <div class="description-detail">Client:<br>Self-initiated</div>
+      <div class="description-detail">Format:<br>Manifesto</div>
+      <div class="description-detail">Designer:<br>Michael Tsalkos</div>
+      <div class="description-detail">Type:<br>New Edge 666 by Charlotte Rohde<br>Sneaky Times by Jules Durand</div>
+    </div>
+    <article class="description-body">
+      <p>We, the undersigned, are graphic designers, photographers, and students who have been brought up in a world in which the techniques and apparatus of creativity have persistently been presented to us as the most lucrative, effective and desirable means of using our talents. You might have read this very well known sentence before. Maybe you stumbled over it in a newspaper, a magazine, on the web, have had a lecture about it or have had a conversation with a lecturer about it. You might have also not heard about it, I didn’t either up until very recently.</p>
+      <p>In 1964, British graphic designer Ken Garland wrote the infamous original manifesto which he named ‘‘first things first’’, a manifesto that argues what we as visual communicators should prioritize first in our field, which at the time was a belief that we should use our power and design skills to form a better future, rather than focusing on irrelevant advertisment graphics, in the form of products like cat food, detergent, slip ons and toothpaste. He acknowledges that these products still need to be made, but we (the designers) should prioritize it as a secondary objective. At the time the text was signed by 20 designers working at the time. (An overview and summaries of the various versions of the manifesto can be read on page five).</p>
+      <p>The manifest got recognition, and later was published in the The Guardian and it got further reach. Later on, designers took the format and used it as a base to speak up about the struggles of our field in different times since 1964. If you haven’t read the different versions before, I would highly recommend you to do so, every point from each version still stands to this day and the versions can be read on the internet.</p>
+      <p>The different versions touch on anti consumerism, the environment and survelliance. This version is something else. This is meant as an uproar and oppurtunity to take a look inside ourselves and recognize that soon, we as individuals and as a group with a profession, in an international community are about to get absolutely fucked. Today the techniques and apparatus have evolved and the way that we recklessly use them without thinking of consequences, might contributes to our demise. If this is to continue we might soon experience the death of our field. Who it this perputrator? I’m of course talking about our companions which come in the form of Monica, Claude or mostly referred to as Chatgpt or Chat.</p>
+      <p>Constantly there’s this fear that Chat will do the job for us, in such a way that is cheaper, faster, colder. We talk about our jobs being important, but with each new update and each new model, we are reminded our practice may very soon be rendered obsolete. Yet despite this awareness, we very quietly still contribute to the extinction of other alike professions. We would rather generate a drawn image than having the illustration drawn by hand or have a fake video made rather than having a real video filmed. We are the contributors of the destruction of other fields and if that is so, then why should others care about our work if we don’t care about their work?</p>
+      <p>I do recognize that artificial intelligence is a tool, we experiment with it, we explore and we adapt. But at the same time we should also refuse to hop where the fence is lowest and it is about time that we should be critical towards these technologies and companies, for what they do or rather what they do against the future. We should be critical towards the authenticity, both in what they offer for information, but also how it contributes towards the authenticity that we produce as creatives. How it takes a lot of different references and creates something that is mediocre, unoriginal and seen before. I encourage you to say no to these tools, and if you can afford collaboration choose collaboration. If you can commission, then commission and if you can sustain human work, sustain it.</p>
+      <p>Some of you who are reading this might be freelancing, others might be working at a studio or a big bureau, where things are easier said than done. But even though you work for higher powers, it is still important to at least have the conversation with peers or people around you, maybe protest and maybe consider your position and stance, if they don’t align with your values. Then what? That’s the scary part, but if it wasn’t scary, it would mean that it wasn’t important.</p>
+      <p>There’s still many possibilities and opportunities, and if you can rely on your skills, and get a job based on your skills in the first place, it means that you can probably impress somebody to get a new position again. Or take the step to create something of your own, and people would appreciate that, that there are more studios or freelancers who actually care about creativity, and in the end you would probably also attract the companies or people you align your values with, but also create the work that you actually want to do.</p>
+      <p>I am not saying not to use ai, some might think that you will be behind in the job market if it’s a skill you haven’t ‘’learned’’. But at least understand it and what it does. In the end, it won’t ever be able to create the imperfections, the randomness and the tactility that we as designers have studied for years and have learned to master through experimentation and time. Experimentation in an analogue context, in a tech context but also in a written context.</p>
+      <p>This whole text is written, probably with a lot of errors, spelling mistakes and other grammatical problems. The language (and graphics for that sake) is deliberately in a writing style that is me, talking to you, in the most informal style. But that is also the beauty of it, just like the graphics. That this is not polished, and has not been run through a large language model, which tends to take your work, thoughts, ideas and minimizes it to something that it sees as better, but is it actually better?</p>
+      <p>In the end text ‘‘optimized’’ by Chat is more plain and in the end boring, it’s easily spottable — especially when it uses an em dash, and a ‘‘smart’’ remark to put emphasis on a point. The only thing it does, is that it makes the job faster. But faster does not mean quality. We live in a world, where everything is faster and faster everyday, but some things need to go at their own pace, it needs to have time to play with and explore, the thing that made us choose the path of design in the first place and made us fall in love with it.</p>
+      <p>Theres something facinating and human in doing a document, choosing size, color, font, shape, aesthetic, function, references, inspiration, reshaping, making a new version, and another one and then another one, evaluating, getting back from a break with new ideas and concepts, executing, saving, choosing paper, printing method, deciding how and finally where it is being displayed. All of theese decisions are not being considered as ‘‘fast’’ and all of these decisions are not up to you when doing a prompt. Faster for the ai means less care, and why design if you don’t care, if there’s no passion for what you are producing, why even produce? As a designer, which I still feel weird addressing myself as, I recognize that it’s a really huge privilege to be in a position where I can study the field of design, get paid to study it and get paid to do work for others. Now when you take this privilege, and use ai as a tool, it’s like treating your own work like shit, like it’s worthless. Also at the same time, when taking other designers’ style and feeding the chat with it, which means you are stealing others work and that their work is beneath appreciation and that it’s worthless. Just because you wanted something that was faster and cheaper, which is interesting because in every other context those two words in a sentence, in the terms of product, means you’re getting a really bad product that is almost ready to be thrown out.</p>
+      <p>Chatgpt probably won’t disappear and I’m not old enough to remember when Photoshop, inkjet or any other graphic production means got released. But I imagine this technological evolution of artificial intelligence, being the equivalent to when the handheld calculator came out. Back in the day, we were told that it was a must to learn how to do math inside your mind, that it was a necessity. Then the smartphone got released, with the ability to download and access applications, including a pocket calculator and that concept was devalued, but not entirely. There’s still a skill to do it, to do it without the help of technological needs, that will be much more appreciated in the end. Which will put you in an advantage. Just like the art of writing, thinking, brainstorming and coming up with new ideas. You could try to make Chat generate ideas for you, but if you have ever tried that before, it seems like it’s stuck on trying to come up with content that thinks outside the box.</p>
+      <p>So what can you do? And what do I propose for you to undersign at the end of the document? This is exactly the part I want you to agree on. I want you to take these reflections, make your own and be aware of the contributions that we are making to the damage of the earth and creativity. I encourage you to read and understand the issue better, to talk to peers about the subject and reflect and question, if the action of using Chat is absolutely necessary for the task you are performing. Take inspiration from the 30% rule, use your creativity and reject the slop when spotted. Don’t support companies devaluating a human worker to something redundant that is being replaced by a machine. And I repeat again, If you can commission, commission and if you can sustain human work, sustain it!</p>
+      <p><strong>1964:</strong><br>The original manifest was written by Ken Garland and touched upon how we as designers should use our focus on more important matters than consumer products, but still recognized the need for said products to being designed, but that they should come as a secondary priority. Hence the name First Things First.</p>
+      <p><strong>2000:</strong><br>36 years later an updated version by Rick Poynor was pubslished in Eye Magazine no. 33 vol. 9. Here he talks about the dot com boom and the height of consumerism but also how aspects of our field has changed since the original release.</p>
+      <p><strong>2014:</strong><br>For the 50th anniversary edition of FTF several designers went together to do the manifest in a web version, this version was released a year after the Cambridge Analytica controversey and talks about ownership of data and personal information.</p>
+      <p><strong>2020:</strong><br>This particular version is about how designers are contributing to capitalism through commercial work and how this contributes to affecting the climate negatively through the production of physical products consisting of fast produced items that are bad for the environment but also enforces a beauty standard that makes the consumer have a negative self image.</p>
+    </article>
+  </aside>
+
+  <main>
+    <section class="project-gallery" aria-label="First Things First project image">
+      <div class="column-two-media">
+        <figure class="hero-image"><img src="../../Portfolio_QuickView/Porfolio_QuickView_FTF/Porfolio_QuickView_FTF_2.png" alt="First Things First manifesto" /></figure>
+        <figure class="project-video">
+          <video src="../../Portfolio_QuickView/Porfolio_QuickView_FTF/Porfolio_QuickView_FTF_3.mov" autoplay muted loop playsinline preload="auto" aria-label="First Things First project video"></video>
+        </figure>
+        <figure><img src="../../Portfolio_QuickView/Porfolio_QuickView_FTF/Porfolio_QuickView_FTF_4.JPG" alt="First Things First project image" /></figure>
+      </div>
+      <figure class="secondary-image"><img src="../../Portfolio_QuickView/Porfolio_QuickView_FTF/Porfolio_QuickView_FTF_1.png" alt="First Things First project image" /></figure>
+    </section>
+  </main>
+  <script>
+    const projectVideo = document.querySelector(".project-video video");
+
+    projectVideo.addEventListener("click", () => {
+      if (projectVideo.paused) {
+        projectVideo.play();
+      } else {
+        projectVideo.pause();
+      }
+    });
+  </script>
+</body>
+</html>

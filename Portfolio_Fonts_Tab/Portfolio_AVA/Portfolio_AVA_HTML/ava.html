@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AVA — Project</title>
+  <link rel="stylesheet" href="../../../Portfolio_General_Items_Assets/project-description.css">
+  <style>
+    @font-face {
+      font-family: 'AVA';
+      src: url('AVA-VariableVF.woff2') format('woff2');
+      font-weight: 1 1000;
+      font-stretch: 0% 200%;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: white;
+      color: black;
+      font-family: 'AVA', sans-serif;
+      overflow: hidden;
+    }
+
+    .ava-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      width: 100vw;
+      height: 100vh;
+      line-height: 0.75;
+      font-variation-settings: 'TRIA' 50, 'STRC' 50, 'EXTD' 50;
+      padding: 2vh;
+    }
+
+    .ava-text span {
+      display: block;
+      font-size: clamp(5vw, 43vh, 35vw); /* responsive font size */
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ava-text" id="avaText">
+    <span>ACADEMY OF</span>
+    <span>VISUAL ARTS</span>
+    <span>FRANKFURT</span>
+  </div>
+
+  <script>
+    const text = document.getElementById('avaText');
+
+    function updateFontVariation(e) {
+      const x = e.clientX / window.innerWidth;
+      const extd = 50 + x * 50; // EXTENDED axis
+      text.style.fontVariationSettings = `'TRIA' 50, 'STRC' 50, 'EXTD' ${extd.toFixed(1)}`;
+    }
+
+    document.addEventListener('mousemove', updateFontVariation);
+    window.addEventListener('resize', () => {
+      // Force a re-render of layout on resize if needed
+      text.style.fontSize = window.innerHeight * 0.12 + 'px';
+    });
+  </script>
+
+  <script src="../../../Portfolio_General_Items_Assets/project-description.js"></script>
+</body>
+</html>

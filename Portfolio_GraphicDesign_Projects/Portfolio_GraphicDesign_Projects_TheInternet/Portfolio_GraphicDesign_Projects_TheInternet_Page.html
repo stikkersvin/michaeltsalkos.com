@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Internet is Dying</title>
+  <link rel="stylesheet" href="../../Portfolio_General_Items_Assets/topbar.css" />
+  <style>
+    :root {
+      --page: #fff;
+      --ink: #0a0a0a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark {
+      --page: #080808;
+      --ink: #f5f5f5;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+      height: 100svh;
+      padding: 6.5rem 1.5rem 1.5rem;
+      overflow: hidden;
+    }
+
+    .project-description {
+      grid-column: 1;
+      max-height: calc(100svh - 8rem);
+      overflow: hidden;
+      font-size: 0.9rem;
+      line-height: 1.25;
+    }
+
+    .description-title,
+    .details-title {
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .description-text {
+      margin-top: 0.75rem;
+    }
+
+    .description-body {
+      margin-top: 1.5rem;
+    }
+
+    .description-body h2 {
+      margin-bottom: 0.75rem;
+      font-size: inherit;
+      font-weight: 700;
+    }
+
+    .description-body p + p {
+      margin-top: 0.75rem;
+    }
+
+    .details {
+      margin-top: 1.5rem;
+    }
+
+    .details-title {
+      margin-bottom: 0.5rem;
+    }
+
+    .detail {
+      padding: 0.4rem 0;
+      border-top: 1px solid currentColor;
+    }
+
+    .project-images-secondary,
+    .project-image {
+      align-self: start;
+      height: calc(100svh - 8rem);
+      overflow-y: auto;
+    }
+
+    .project-images-secondary {
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .project-image {
+      grid-column: 3 / 5;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: filter 0.3s ease;
+    }
+
+    body.dark img {
+      filter: invert(1);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+      }
+
+      main {
+        display: block;
+        height: auto;
+        padding: 5.5rem 1rem 1rem;
+        overflow: visible;
+      }
+
+      .project-description {
+        max-height: none;
+        margin-bottom: 3rem;
+        overflow: visible;
+      }
+
+      .project-images-secondary,
+      .project-image {
+        height: auto;
+        overflow: visible;
+      }
+
+      .project-images-secondary {
+        margin-bottom: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <main>
+    <aside class="project-description">
+      <div class="description-title">Description</div>
+      <p class="description-text">The Internet is Dying is an essay and poster exploring the changing condition of the internet.</p>
+      <div class="details">
+        <div class="details-title">Details</div>
+        <div class="detail">Year:<br>2025 oct</div>
+        <div class="detail">Client:<br>Self-initiated</div>
+        <div class="detail">Format:<br>Essay, Poster</div>
+        <div class="detail">Designer:<br>Michael Tsalkos</div>
+      </div>
+      <article class="description-body">
+        <h2>Zed's Dead Baby</h2>
+        <p>In a not so near future, the internet will become entirely artificial. Every activity, every piece of content, will be generated and automated by artificial intelligence, designed to capture your attention while quietly consuming your focus and sinking your attention span. The machine feeds on your likes, clicks, and comments, and will lure you in with every trick it knows.</p>
+        <p>Some speculate that this feedback loop can exist without human presence altogether. That the system no longer needs participation, only repetition. Meaning that you might experience the internet without any trace of human involvement. At some point, the traffic, posts, and users will be replaced by bots, and people will no longer guide the direction of the network. What remains is an echo chamber of automation, an imitation of connection meaning the death of the internet.</p>
+      </article>
+    </aside>
+
+    <section class="project-images-secondary" aria-label="The Internet is Dying additional images">
+      <figure><img src="../../Portfolio_QuickView/Portfolio_QuickView_TheInternet/Portfolio_QuickView_TheInternet_2.png" alt="The Internet is Dying project image" /></figure>
+      <figure><img src="../../Portfolio_QuickView/Portfolio_QuickView_TheInternet/Portfolio_QuickView_TheInternet_3.png" alt="The Internet is Dying project image" /></figure>
+      <figure><img src="../../Portfolio_QuickView/Portfolio_QuickView_TheInternet/Portfolio_QuickView_TheInternet_4.png" alt="The Internet is Dying project image" /></figure>
+      <figure><img src="../../Portfolio_QuickView/Portfolio_QuickView_TheInternet/Portfolio_QuickView_TheInternet_5.png" alt="The Internet is Dying project image" /></figure>
+    </section>
+
+    <figure class="project-image">
+      <img src="../../Portfolio_QuickView/Portfolio_QuickView_TheInternet/Portfolio_QuickView_TheInternet_1.png" alt="The Internet is Dying poster" />
+    </figure>
+  </main>
+</body>
+</html>

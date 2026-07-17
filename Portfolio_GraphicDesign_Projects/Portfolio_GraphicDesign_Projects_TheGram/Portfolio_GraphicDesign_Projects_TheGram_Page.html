@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Gram as Personal Branding</title>
+  <link rel="stylesheet" href="../../Portfolio_General_Items_Assets/topbar.css" />
+  <style>
+    :root {
+      --page: #fff;
+      --ink: #0a0a0a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark {
+      --page: #080808;
+      --ink: #f5f5f5;
+    }
+
+    main {
+      padding: 6.5rem 1.5rem 1.5rem;
+    }
+
+    .project-description {
+      position: fixed;
+      top: 4rem;
+      left: 1.5rem;
+      z-index: 10;
+      width: calc((100% - 4.5rem) / 4);
+      padding: 0.75rem;
+      background: var(--page);
+      color: var(--ink);
+      font-size: 0.9rem;
+      line-height: 1.25;
+      max-height: calc(100svh - 5.5rem);
+      overflow-y: auto;
+    }
+
+    .description-title,
+    .description-details-title {
+      font-size: inherit;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .description-text {
+      margin-top: 0.75rem;
+    }
+
+    .description-details {
+      margin-top: 1.5rem;
+    }
+
+    .description-details-title {
+      margin-bottom: 0.5rem;
+    }
+
+    .description-detail {
+      padding: 0.4rem 0;
+      border-top: 1px solid currentColor;
+    }
+
+    .project-gallery {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .hero-image {
+      grid-column: 2 / 5;
+    }
+
+    .hero-image img {
+      width: 100%;
+      max-width: none;
+      max-height: none;
+    }
+
+    .description-essay {
+      margin-top: 1.5rem;
+    }
+
+    .description-essay p {
+      margin-bottom: 0.65em;
+      break-inside: avoid;
+    }
+
+    .description-essay a {
+      color: #0000ee;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.12em;
+    }
+
+    .essay-title {
+      margin-bottom: 0.65em;
+      font-size: inherit;
+      font-weight: 700;
+      line-height: inherit;
+    }
+
+    img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: calc(100svh - 8rem);
+      object-fit: contain;
+      transition: filter 0.3s ease;
+    }
+
+    body.dark img {
+      filter: invert(1);
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 5.5rem 1rem 1rem;
+      }
+
+      .project-description {
+        position: static;
+        width: 100%;
+        margin-bottom: 3rem;
+        padding: 0;
+      }
+
+      .project-gallery {
+        display: block;
+      }
+
+      figure {
+        width: 100% !important;
+        margin: 0 0 1rem !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <aside class="project-description">
+    <div class="description-title">Description</div>
+    <p class="description-text">The Gram as Personal Branding examines how identity and personal branding are constructed through social media.</p>
+    <div class="description-details">
+      <div class="description-details-title">Details</div>
+      <div class="description-detail">Year:<br>2025 nov</div>
+      <div class="description-detail">Client:<br>Self-initiated</div>
+      <div class="description-detail">Format:<br>Essay, Poster</div>
+      <div class="description-detail">Designer:<br>Michael Tsalkos</div>
+      <div class="description-detail">Writer:<br>Michael Tsalkos</div>
+    </div>
+    <article class="description-essay">
+      <p>IG is a great tool to showcase work, document processes and to catch a profile’s sense of visual style. In my own experience with posting my own work on the platform for over five years, I’ve experienced a lot of benefits, but also some aspects I’m more critical of when it comes to shaping one’s online presence.</p>
+      <h2 class="essay-title">@student studios</h2>
+      <p>It seems that in this day and age, having a profile is a must, whether it’s a personal or professional profile. Maybe you like to keep them separate? Many people do. But I can’t help noticing that during my studies, a lot of fellow students have started these so-called “studio” profiles, even though they don’t have a physical studio and work as a single person. But I guess people just think it sounds cool.</p>
+      <p>These profiles are often active for a short period of time and then abandoned, left to wonder in the digital abyss, a scrapyard of old projects, a page never to be updated again. But why though? Perhaps because there’s this expectation to perform well, and when the posts don’t do, it’s somehow embarrassing. Or maybe it could just be because of laziness, the profiles losing patience with posting, making stories, and keeping it all up for a small audience. And honestly, both being embarrassed or being impatient makes sense. We crave fast results, in likes and comments, as a simple form of validation, it’s a proof that something’s good, if gets plenty of thumbs up. But not getting a ton of likes on a poster, does not mean a bad project. What’s rarely considered is how much the algorithm affects visibility. Factors like: time of day you post, the type of content, and how many likes it gets in the first ten minutes can all play a role. I don’t know all the details, but from experience (and some light research), I do know that posts with faces, selfies, photos from nights out, vacation pictures perform way better than graphics. So maybe the trick is to post a selfie with your poster next time.</p>
+      <h2 class="essay-title">Web or Gram</h2>
+      <p>Still, many designers care deeply about keeping a strict separation between their graphic design account and their personal one. For years I’ve been wondering if these two universes could merge and for a long time I didn’t think it was possible, and potential clients might find it odd to scroll through posters and personal archiving. It feels contradictory. You wouldn’t see that contradiction on a portfolio website. And if you were to see the same content from instagram on a website it would be considered unprofessional, but in reverse it would be fine. Even though both platforms could serve similar functions. Yet, Instagram seems far more important than a website. With its recommendation features and algorithmic visibility, it’s much easier to discover like-minded profiles, related work and find potential jobs.</p>
+      <p>Some time ago, we visited the Copenhagen office of the <a href="https://abake.fr/" target="_blank" rel="noopener noreferrer">studio Åbake</a>. What fascinated me before going there was actually their lack of online presence. They barely exist online, aside from a very minimal website that doesn’t say much about them.</p>
+      <h2 class="essay-title">Work Life Balance</h2>
+      <p>Which is quite interesting, considering they’ve worked with clients like Virgil Abloh, Balenciaga, and others. But it’s also worth remembering that the founders started out in the early 2000s, when having a website wasn’t as crucial and word of mouth carried more weight. For them, not having a proper webpage or instagram is a statement. It shows great confidence, but at the same time huge privilege. They’re established enough to not need an online presence, which for designers of today, would be impossible to do. We rely on being visible and easily accessible across platforms. For most people, it’s easier to discover someone through Instagram than through a website. The app’s structure makes it more approachable, easier to manage as a single user, and more intuitive to navigate since everyone’s familiar with the interface.</p>
+      <p>In contrast to Åbake and the student studio instagram, I also recently came across <a href="https://www.instagram.com/charlotte__rohde/?hl=en" target="_blank" rel="noopener noreferrer">Charlotte Rohde</a>, a Berlin-based graphic and type designer whose work I find really inspiring.</p>
+      <p>What I admire is not only her graphics, but how she presents both herself and her work as one cohesive whole on instagram. Her personality and visual language melt together, her presence becomes part of her design practice, showing that you can move fluidly between the personal and the professional. So it’s not impossible to do!</p>
+      <p>Going back to the student studio thing, I also think there’s something very interesting with how people curate their bios, some people won’t showcase their work, but will flex their position at an agency or which school they attend. It’s almost like a form of subtle signaling in the form of a digital badge of belonging. Like kinda a tribal marker, indicating which community, institution, or aesthetic a person identifies with.</p>
+      <p>In the end, I think it’s about balance. Platforms like instagram give us a voice and visibility that designers before didn’t have, but they also come with an invisible pressure to perform, to label ourselves, to belong. Whether we choose to post, to curate, or to step back entirely, we’re still participating in a system that constantly shapes how we see each other and ourselves.</p>
+    </article>
+  </aside>
+
+  <main>
+    <section class="project-gallery" aria-label="The Gram project images">
+      <figure class="hero-image"><img src="../../Portfolio_QuickView/Portfolio_QuickView_THEGRAM/Portfolio_QuickView_THEGRAM_5.png" alt="The Gram as Personal Branding detail" /></figure>
+    </section>
+  </main>
+</body>
+</html>

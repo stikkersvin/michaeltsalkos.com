@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>About - Michael Tsalkos</title>
+  <link rel="stylesheet" href="../Portfolio_General_Items_Assets/topbar.css" />
+  <link rel="stylesheet" href="about.css" />
+</head>
+<body class="contact-page">
+  <script src="../Portfolio_General_Items_Assets/topbar.js"></script>
+
+  <main class="contact-main">
+    <section class="contact-intro" aria-label="Introduction">
+      <p>My practice moves between printed matter, visual identities, editorial design, posters, type design, research-based projects, coded tools and interactive experiences. Rooted in a strong interest in typography, I use structure, systems and visual language to create work that feels both precise and expressive.</p>
+      <p>I work across cultural and self-initiated projects, often exploring music, publishing, internet culture, football, archives, data and visual communication. Across formats, my focus is on building distinct visual worlds shaped by context, concept and material.</p>
+      <p>Get in touch and let's work together :))</p>
+      <p>Copenhagen, Denmark<br><a href="mailto:mtsalkos@hotmail.com">mtsalkos@hotmail.com</a><br>+45 27501097<br><a href="https://www.instagram.com/stikkersvin/?hl=en" target="_blank" rel="noopener noreferrer">Instagram</a></p>
+    </section>
+
+    <section class="experience-panel" aria-label="Education and work">
+      <div class="experience-toggle" role="tablist" aria-label="Choose timeline">
+        <button type="button" data-experience-tab="education" aria-selected="true">Education</button>
+        <span>/</span>
+        <button type="button" data-experience-tab="work" aria-selected="false">Work</button>
+      </div>
+
+      <div class="experience-grid experience-education is-active" data-experience-panel="education" role="tabpanel">
+        <article class="experience-item">
+          <p>Krabbesholm<br>Preparatory Course in Graphic Design.<br>2019-2020</p>
+        </article>
+        <article class="experience-item">
+          <p>DMJX<br>BA in Creative Communication.<br>2021-dropout</p>
+        </article>
+        <article class="experience-item">
+          <p>The Royal Danish Academy<br>BA in Visual Design &amp; Interaction.<br>2022-2025</p>
+        </article>
+        <article class="experience-item">
+          <p>The Royal Danish Academy<br>MA in Graphic Communication Design.<br>2025-2027</p>
+        </article>
+      </div>
+
+      <div class="experience-grid experience-work" data-experience-panel="work" role="tabpanel" hidden>
+        <article class="experience-item">
+          <p>Krabbesholm<br>Student Assistant.<br>2019-2020</p>
+        </article>
+        <article class="experience-item">
+          <p>DMJX<br>Print Support Student Assistant.<br>2021-2022</p>
+        </article>
+        <article class="experience-item">
+          <p>The Royal Danish Academy<br>Print Assistant.<br>2022-2023</p>
+        </article>
+        <article class="experience-item">
+          <p>E-Types<br>Studio Assistant Manager.<br>2023-2024</p>
+        </article>
+        <article class="experience-item">
+          <p>Accenture Song<br>Graphic Designer &amp; Art Director.<br>2025-2026</p>
+        </article>
+        <article class="experience-item">
+          <p>StartUpHub<br>Graphic Designer.<br>2026-Now</p>
+        </article>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const buttons = document.querySelectorAll('[data-experience-tab]');
+      const panels = document.querySelectorAll('[data-experience-panel]');
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const activeTab = button.dataset.experienceTab;
+          buttons.forEach((item) => {
+            item.setAttribute('aria-selected', String(item === button));
+          });
+          panels.forEach((panel) => {
+            const isActive = panel.dataset.experiencePanel === activeTab;
+            panel.hidden = !isActive;
+            panel.classList.toggle('is-active', isActive);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

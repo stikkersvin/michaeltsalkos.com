@@ -1,0 +1,69 @@
+.project-description {
+  position: fixed;
+  top: 4rem;
+  left: 1.5rem;
+  z-index: 1000;
+  width: calc((100% - (3 * clamp(1rem, 2vw, 2.5rem))) / 4);
+  color: #000;
+  background: transparent;
+  mix-blend-mode: normal;
+  opacity: 0.15;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  padding: 0.5rem;
+  transition: opacity 0.35s ease, background-color 0.35s ease;
+}
+
+.project-description:hover {
+  background: #fff;
+  opacity: 1;
+}
+
+.project-description-title {
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.project-description p {
+  margin: 0;
+}
+
+.project-description-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.6s ease, opacity 0.35s ease, padding-top 0.6s ease;
+}
+
+.project-description:hover .project-description-content {
+  max-height: var(--project-description-height, 50rem);
+  padding-top: 0.75rem;
+  opacity: 1;
+}
+
+.project-description-details {
+  margin-top: 1.5rem;
+}
+
+.project-description-details-title {
+  margin: 0 0 0.5rem;
+  font-size: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.project-description-row {
+  padding: 0.4rem 0;
+  border-top: 1px solid currentColor;
+}
+
+@media (max-width: 768px) {
+  .project-description {
+    top: 3.5rem;
+    left: 1rem;
+    width: calc(100% - 2rem);
+    font-size: 0.8rem;
+  }
+}
