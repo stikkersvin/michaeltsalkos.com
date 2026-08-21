@@ -4,6 +4,10 @@
     const projects = Array.from(document.querySelectorAll('.project'));
     const viewButtons = document.querySelectorAll('[data-view]');
     const quickView = document.querySelector('.quick-view');
+    const quickViewLoader = document.createElement('span');
+    quickViewLoader.className = 'quick-view-loader';
+    quickViewLoader.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(quickViewLoader);
     const scrollCue = document.querySelector('.scroll-cue');
     const spatialIntro = document.querySelector('.spatial-intro');
     const mobileViewport = window.matchMedia('(max-width: 760px)');
@@ -50,12 +54,103 @@
     displayTypes.push(...displayTypeLayers.map(({ layer }) => layer));
     let activeQuickViewProject = null;
     let quickViewIndex = 0;
+    const loadedImageSources = new Map();
     let displayTypeUpdateQueued = false;
     let activeView = 'spatial';
     let spatialScrollPosition = window.scrollY;
 
     function quickViewImages(project) {
       return project.dataset.quickView ? project.dataset.quickView.split('|') : [];
+    }
+
+    function imageSourceKey(source) {
+      return new URL(source, window.location.href).href;
+    }
+
+    function setProgressImage(image, source, options = {}) {
+      const {
+        delay = 120,
+        onStart = () => {},
+        onProgress = () => {},
+        onComplete = () => {},
+        onError = () => {}
+      } = options;
+      const key = imageSourceKey(source);
+      const cachedSource = loadedImageSources.get(key);
+      const loadId = `${Date.now()}-${Math.random()}`;
+      image.dataset.progressLoadId = loadId;
+
+      if (cachedSource) {
+        image.src = cachedSource;
+        onComplete();
+        return;
+      }
+
+      let isDone = false;
+      let isVisible = false;
+      const showTimer = window.setTimeout(() => {
+        if (isDone || image.dataset.progressLoadId !== loadId) return;
+        isVisible = true;
+        onStart();
+        onProgress(0);
+      }, delay);
+
+      const finish = () => {
+        if (image.dataset.progressLoadId !== loadId) return;
+        isDone = true;
+        window.clearTimeout(showTimer);
+        onComplete();
+      };
+
+      const fallbackToNativeLoad = () => {
+        image.onload = () => {
+          loadedImageSources.set(key, source);
+          finish();
+        };
+        image.onerror = () => {
+          finish();
+          onError();
+        };
+        image.src = source;
+      };
+
+      fetch(key)
+        .then((response) => {
+          if (!response.ok || !response.body) throw new Error('Image progress unavailable');
+          const total = Number(response.headers.get('content-length')) || 0;
+          const reader = response.body.getReader();
+          const chunks = [];
+          let received = 0;
+
+          const read = () => reader.read().then(({ done, value }) => {
+            if (image.dataset.progressLoadId !== loadId) return null;
+            if (done) return chunks;
+            chunks.push(value);
+            received += value.length;
+            if (total && isVisible) {
+              onProgress(Math.min(99, Math.round((received / total) * 100)));
+            }
+            return read();
+          });
+
+          return read().then((loadedChunks) => {
+            if (!loadedChunks || image.dataset.progressLoadId !== loadId) return;
+            const blob = new Blob(loadedChunks, {
+              type: response.headers.get('content-type') || 'image/*'
+            });
+            const objectUrl = URL.createObjectURL(blob);
+            loadedImageSources.set(key, objectUrl);
+            image.onload = () => finish();
+            image.onerror = () => {
+              URL.revokeObjectURL(objectUrl);
+              loadedImageSources.delete(key);
+              fallbackToNativeLoad();
+            };
+            image.src = objectUrl;
+            if (isVisible) onProgress(100);
+          });
+        })
+        .catch(fallbackToNativeLoad);
     }
 
     if (nightJourneysProject) {
@@ -447,9 +542,22 @@
     function renderSlideshow() {
       if (!activeSlideshow) return;
       const hasMultipleImages = activeSlideshow.images.length > 1;
-      slideshowImage.src = activeSlideshow.images[activeSlideIndex];
+      const source = activeSlideshow.images[activeSlideIndex];
       slideshowImage.alt = `${activeSlideshow.name}, image ${activeSlideIndex + 1} of ${activeSlideshow.images.length}`;
-      slideshowMagnifier.style.backgroundImage = `url("${activeSlideshow.images[activeSlideIndex]}")`;
+      setProgressImage(slideshowImage, source, {
+        onStart: () => slideshow.classList.add('is-loading'),
+        onProgress: (progress) => slideshow.style.setProperty('--slideshow-load-progress', `"${progress}%"`),
+        onComplete: () => {
+          slideshow.classList.remove('is-loading');
+          slideshow.style.removeProperty('--slideshow-load-progress');
+          slideshowMagnifier.style.backgroundImage = `url("${slideshowImage.currentSrc || slideshowImage.src || source}")`;
+        },
+        onError: () => {
+          slideshow.classList.remove('is-loading');
+          slideshow.style.removeProperty('--slideshow-load-progress');
+          slideshowMagnifier.style.backgroundImage = `url("${source}")`;
+        }
+      });
       slideshowMagnifier.classList.remove('is-visible');
       isSlideshowMagnifierZoomed = false;
       slideshowImage.style.cursor = 'zoom-in';
@@ -478,6 +586,9 @@
       document.body.classList.remove('spatial-slideshow-open');
       activeSlideshow = null;
       slideshowImage.removeAttribute('src');
+      slideshowImage.removeAttribute('data-progress-load-id');
+      slideshow.classList.remove('is-loading');
+      slideshow.style.removeProperty('--slideshow-load-progress');
       slideshowMagnifier.classList.remove('is-visible');
       slideshowMagnifier.style.backgroundImage = '';
       isSlideshowMagnifierZoomed = false;
@@ -618,6 +729,8 @@
       quickView.style.top = aboveTop < 0
         ? `${event.clientY + gap}px`
         : `${aboveTop}px`;
+      quickViewLoader.style.left = quickView.style.left;
+      quickViewLoader.style.top = quickView.style.top;
     }
 
     function showQuickView(project, event) {
@@ -629,7 +742,22 @@
       ) return;
       activeQuickViewProject = project;
       quickViewIndex = 0;
-      quickView.src = images[quickViewIndex];
+      setProgressImage(quickView, images[quickViewIndex], {
+        onStart: () => {
+          quickViewLoader.classList.add('is-visible');
+        },
+        onProgress: (progress) => {
+          quickViewLoader.textContent = `${progress}%`;
+        },
+        onComplete: () => {
+          quickViewLoader.classList.remove('is-visible');
+          quickViewLoader.textContent = '';
+        },
+        onError: () => {
+          quickViewLoader.classList.remove('is-visible');
+          quickViewLoader.textContent = '';
+        }
+      });
       quickView.classList.add('is-visible');
       positionQuickView(event);
     }
@@ -637,6 +765,9 @@
     function hideQuickView() {
       activeQuickViewProject = null;
       quickView.classList.remove('is-visible');
+      quickView.removeAttribute('data-progress-load-id');
+      quickViewLoader.classList.remove('is-visible');
+      quickViewLoader.textContent = '';
     }
 
     function updateDisplayTypeForScroll() {
@@ -804,7 +935,20 @@
         }
         quickViewIndex = (quickViewIndex + 1) % images.length;
         project.style.setProperty('--row-background', `url("${images[quickViewIndex]}")`);
-        quickView.src = images[quickViewIndex];
+        setProgressImage(quickView, images[quickViewIndex], {
+          onStart: () => quickViewLoader.classList.add('is-visible'),
+          onProgress: (progress) => {
+            quickViewLoader.textContent = `${progress}%`;
+          },
+          onComplete: () => {
+            quickViewLoader.classList.remove('is-visible');
+            quickViewLoader.textContent = '';
+          },
+          onError: () => {
+            quickViewLoader.classList.remove('is-visible');
+            quickViewLoader.textContent = '';
+          }
+        });
         activeQuickViewProject = project;
         if (document.body.classList.contains('list-view')) {
           quickView.classList.add('is-visible');
