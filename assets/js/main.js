@@ -164,8 +164,38 @@
 
         if (itemImages.length > 1) {
           let previewIndex = Math.max(0, itemImages.indexOf(source));
+          const previewTrack = document.createElement('span');
+          previewTrack.className = 'mobile-spatial-preview-track';
+          const createPreviewSlide = (previewImage) => {
+            const slide = document.createElement('span');
+            slide.className = 'mobile-spatial-preview-slide';
+            slide.appendChild(previewImage);
+            return slide;
+          };
+          const createPreviewImage = () => {
+            const previewImage = document.createElement('img');
+            previewImage.alt = '';
+            previewImage.loading = 'lazy';
+            previewImage.decoding = 'async';
+            return previewImage;
+          };
+          const previousImage = createPreviewImage();
+          const nextImage = createPreviewImage();
+          image.classList.add('mobile-spatial-preview-current-image');
+          previewTrack.append(
+            createPreviewSlide(previousImage),
+            createPreviewSlide(image),
+            createPreviewSlide(nextImage)
+          );
+          imageStage.replaceChildren(previewTrack);
+          const previewSlideDistance = () => {
+            const gap = Number.parseFloat(window.getComputedStyle(previewTrack).columnGap) || 0;
+            return imageStage.clientWidth + gap;
+          };
           const updatePreviewImage = () => {
+            previousImage.src = itemImages[(previewIndex - 1 + itemImages.length) % itemImages.length];
             image.src = itemImages[previewIndex];
+            nextImage.src = itemImages[(previewIndex + 1) % itemImages.length];
             item.dataset.slideshowImageIndex = String(previewIndex);
             queueMobileProjectWidth();
           };
@@ -181,7 +211,7 @@
             imageStage.style.setProperty('--mobile-preview-x', `${slideDirection * distance}px`);
 
             window.setTimeout(() => {
-              movePreviewImage(slideDirection > 0 ? -1 : 1);
+              movePreviewImage(slideDirection < 0 ? 1 : -1);
               imageStage.classList.add('is-dragging');
               imageStage.style.setProperty('--mobile-preview-x', `${-slideDirection * distance}px`);
 
@@ -210,20 +240,20 @@
             previousButton.addEventListener('click', (event) => {
               event.preventDefault();
               event.stopPropagation();
-              slidePreviewImage(1);
+              slidePreviewImage(1, previewSlideDistance());
             });
 
             nextButton.addEventListener('click', (event) => {
               event.preventDefault();
               event.stopPropagation();
-              slidePreviewImage(-1);
+              slidePreviewImage(-1, previewSlideDistance());
             });
 
             imageStage.addEventListener('click', (event) => {
               if (event.target.closest('.mobile-spatial-preview-arrow')) return;
               const rect = imageStage.getBoundingClientRect();
               const direction = event.clientX < rect.left + rect.width / 2 ? -1 : 1;
-              slidePreviewImage(direction < 0 ? 1 : -1);
+              slidePreviewImage(direction < 0 ? 1 : -1, previewSlideDistance());
             });
 
             imageStage.append(previousButton, nextButton);
@@ -265,13 +295,14 @@
               imageStage.style.setProperty('--mobile-preview-x', '0px');
               return;
             }
-            slidePreviewImage(deltaX);
+            slidePreviewImage(deltaX, previewSlideDistance());
           });
 
           imageStage.addEventListener('touchcancel', () => {
             imageStage.classList.remove('is-dragging');
             imageStage.style.setProperty('--mobile-preview-x', '0px');
           });
+          updatePreviewImage();
 
         }
 

@@ -1724,13 +1724,34 @@
         margin-left: auto;
         object-fit: contain;
         object-position: center;
-        transform: translate3d(var(--mobile-preview-x, 0), 0, 0);
-        transition: filter 0.3s ease, transform 180ms ease;
+        transition: filter 0.3s ease;
+      }
+
+      .mobile-spatial-preview-track {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        width: 100%;
+        transform: translate3d(calc(-100% - 1.25rem + var(--mobile-preview-x, 0px)), 0, 0);
+        transition: transform 180ms ease;
         will-change: transform;
       }
 
-      .mobile-spatial-catalogue-image.is-dragging img {
-        transition: filter 0.3s ease;
+      .mobile-spatial-preview-slide {
+        display: flex;
+        flex: 0 0 100%;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+      }
+
+      .mobile-spatial-preview-slide img {
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .mobile-spatial-catalogue-image.is-dragging .mobile-spatial-preview-track {
+        transition: none;
       }
 
       body.dark .mobile-spatial-catalogue-item[data-display-type="Home|Shirt|24/25"] .mobile-spatial-catalogue-image img[src*="Portfolio_QuickView_FCKADK_4"],
