@@ -1,4 +1,4 @@
-// Inject shared top bar
+// Inject shared top bar and handle desktop dark mode toggle
 (function () {
   const path = decodeURIComponent(window.location.pathname || '');
   const marker = '/Web Portfolio';
@@ -15,11 +15,19 @@
   const primaryLabel = isFonts ? 'Graphic Design' : 'Fonts';
 
   const TOPBAR_HTML = `
-    <header class="topbar-header"><a href="${linkGraphic}">MICHAEL TSALKOS™</a></header>
     <nav class="topbar-nav">
+      <a href="${linkGraphic}">Graphic Design</a>
+      <a href="${linkFonts}">Fonts</a>
+    </nav>
+    <header class="topbar-header"><a href="${linkGraphic}">MICHAEL TSALKOS™</a></header>
+    <nav class="topbar-mobile-nav">
       <a href="${primaryLink}">${primaryLabel}</a>
       <a href="${linkAbout}">About</a>
     </nav>
+    <a class="topbar-about" href="${linkAbout}">About</a>
+    <button class="topbar-switch" id="sharedThemeSwitch" role="switch" aria-checked="false" aria-label="Toggle dark mode">
+      <div class="topbar-knob" id="sharedKnob"></div>
+    </button>
   `;
 
   const wrapper = document.createElement('div');
@@ -29,6 +37,9 @@
     frag.appendChild(wrapper.firstChild);
   }
   document.body.appendChild(frag);
+
+  const switchBtn = document.getElementById('sharedThemeSwitch');
+  const knob = document.getElementById('sharedKnob');
 
   const mobileHeaderQuery = window.matchMedia('(max-width: 768px)');
   let viewportOffsetFrame = null;
@@ -55,4 +66,36 @@
     window.visualViewport.addEventListener('scroll', queueMobileViewportOffset);
   }
   window.addEventListener('orientationchange', queueMobileViewportOffset);
+
+  if (!switchBtn || !knob) return;
+
+  const dist = 40 - 2 - 16 - 2;
+  const applyState = (dark) => {
+    document.body.classList.toggle('dark', dark);
+    knob.style.transform = `translateX(${dark ? dist : 0}px)`;
+    switchBtn.setAttribute('aria-checked', String(dark));
+    try { localStorage.setItem('theme-dark', dark ? '1' : '0'); } catch (e) {}
+  };
+
+  let storedDark = null;
+  try {
+    const v = localStorage.getItem('theme-dark');
+    if (v === '1') storedDark = true;
+    if (v === '0') storedDark = false;
+  } catch (e) {}
+  applyState(storedDark !== null ? storedDark : document.body.classList.contains('dark'));
+
+  switchBtn.addEventListener('click', () => {
+    const dark = !document.body.classList.contains('dark');
+    applyState(dark);
+    const x = dark ? dist : 0;
+    knob.animate(
+      [
+        { transform: `translateX(${x}px)` },
+        { transform: `translateX(${dark ? x + 2 : x - 2}px)` },
+        { transform: `translateX(${x}px)` },
+      ],
+      { duration: 350, easing: 'cubic-bezier(0.25, 1.5, 0.5, 1)' }
+    );
+  });
 })();

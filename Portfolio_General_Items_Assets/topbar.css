@@ -1,6 +1,9 @@
 /* Shared top bar styles */
 .topbar-nav,
-.topbar-header {
+.topbar-mobile-nav,
+.topbar-header,
+.topbar-about,
+.topbar-switch {
   mix-blend-mode: difference;
   color: #fff;
   position: relative;
@@ -10,10 +13,10 @@
 .topbar-header {
   position: fixed;
   top: 0;
-  left: 1.5rem;
+  left: 0;
+  width: 100%;
   padding: 1rem 1.5rem;
-  padding-left: 0;
-  text-align: left;
+  text-align: center;
   font-weight: 700;
   font-size: 0.9rem;
   letter-spacing: -0.015em;
@@ -31,9 +34,7 @@
 .topbar-nav {
   position: fixed;
   top: 1rem;
-  right: 1.5rem;
-  display: flex;
-  gap: 1.2rem;
+  left: 1.5rem;
   white-space: nowrap;
   font-size: 0.9rem;
   font-weight: 500;
@@ -43,10 +44,59 @@
 .topbar-nav a {
   color: inherit;
   text-decoration: none;
+  margin-right: 1.2rem;
   transition: opacity 0.2s;
 }
 .topbar-nav a:hover {
   opacity: 0.6;
+}
+
+.topbar-mobile-nav {
+  display: none;
+}
+
+.topbar-about {
+  position: fixed;
+  top: 1rem;
+  right: 5.2rem;
+  z-index: 3;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  mix-blend-mode: difference;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.topbar-about:hover {
+  opacity: 0.6;
+}
+
+.topbar-switch {
+  position: fixed;
+  top: 1rem;
+  right: 1.5rem;
+  z-index: 2;
+  width: 40px;
+  height: 20px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: background 0.3s ease;
+}
+
+.topbar-knob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateX(0);
+  transition: transform 0.3s cubic-bezier(0.25, 1.5, 0.5, 1), background 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -69,6 +119,15 @@
   }
 
   .topbar-nav {
+    display: none;
+  }
+
+  .topbar-about,
+  .topbar-switch {
+    display: none;
+  }
+
+  .topbar-mobile-nav {
     position: fixed;
     top: calc(var(--topbar-visual-offset, 0px) + env(safe-area-inset-top) + 0.6rem);
     right: 1rem;
@@ -76,5 +135,11 @@
     display: flex;
     gap: 0.9rem;
     font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .topbar-mobile-nav a {
+    color: inherit;
+    text-decoration: none;
   }
 }
