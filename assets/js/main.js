@@ -173,6 +173,29 @@
             previewIndex = (previewIndex + direction + itemImages.length) % itemImages.length;
             updatePreviewImage();
           };
+          const slidePreviewImage = (direction, distance = imageStage.clientWidth || window.innerWidth) => {
+            if (imageStage.dataset.isAnimating === 'true') return;
+            const slideDirection = direction < 0 ? -1 : 1;
+            imageStage.dataset.isAnimating = 'true';
+            imageStage.classList.remove('is-dragging');
+            imageStage.style.setProperty('--mobile-preview-x', `${slideDirection * distance}px`);
+
+            window.setTimeout(() => {
+              movePreviewImage(slideDirection > 0 ? -1 : 1);
+              imageStage.classList.add('is-dragging');
+              imageStage.style.setProperty('--mobile-preview-x', `${-slideDirection * distance}px`);
+
+              window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                  imageStage.classList.remove('is-dragging');
+                  imageStage.style.setProperty('--mobile-preview-x', '0px');
+                  window.setTimeout(() => {
+                    delete imageStage.dataset.isAnimating;
+                  }, 190);
+                });
+              });
+            }, reduceMotion.matches ? 0 : 180);
+          };
           if (!mobileViewport.matches) {
             const previousButton = document.createElement('button');
             previousButton.className = 'mobile-spatial-preview-arrow mobile-spatial-preview-previous';
@@ -187,20 +210,20 @@
             previousButton.addEventListener('click', (event) => {
               event.preventDefault();
               event.stopPropagation();
-              movePreviewImage(-1);
+              slidePreviewImage(1);
             });
 
             nextButton.addEventListener('click', (event) => {
               event.preventDefault();
               event.stopPropagation();
-              movePreviewImage(1);
+              slidePreviewImage(-1);
             });
 
             imageStage.addEventListener('click', (event) => {
               if (event.target.closest('.mobile-spatial-preview-arrow')) return;
               const rect = imageStage.getBoundingClientRect();
               const direction = event.clientX < rect.left + rect.width / 2 ? -1 : 1;
-              movePreviewImage(direction);
+              slidePreviewImage(direction < 0 ? 1 : -1);
             });
 
             imageStage.append(previousButton, nextButton);
@@ -218,20 +241,36 @@
           }, { passive: true });
 
           imageStage.addEventListener('touchmove', (event) => {
+            if (imageStage.dataset.isAnimating === 'true') return;
             if (event.touches.length !== 1) return;
             const deltaX = event.touches[0].clientX - touchStartX;
             const deltaY = event.touches[0].clientY - touchStartY;
             if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
               touchMoved = true;
+              event.preventDefault();
+              imageStage.classList.add('is-dragging');
+              imageStage.style.setProperty('--mobile-preview-x', `${deltaX}px`);
             }
-          }, { passive: true });
+          }, { passive: false });
 
           imageStage.addEventListener('touchend', (event) => {
-            if (!touchMoved || !event.changedTouches.length) return;
+            imageStage.classList.remove('is-dragging');
+            if (!touchMoved || !event.changedTouches.length) {
+              imageStage.style.setProperty('--mobile-preview-x', '0px');
+              return;
+            }
             const deltaX = event.changedTouches[0].clientX - touchStartX;
             const deltaY = event.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
-            movePreviewImage(deltaX < 0 ? 1 : -1);
+            if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) {
+              imageStage.style.setProperty('--mobile-preview-x', '0px');
+              return;
+            }
+            slidePreviewImage(deltaX);
+          });
+
+          imageStage.addEventListener('touchcancel', () => {
+            imageStage.classList.remove('is-dragging');
+            imageStage.style.setProperty('--mobile-preview-x', '0px');
           });
 
         }

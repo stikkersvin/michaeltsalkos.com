@@ -1710,6 +1710,8 @@
         min-height: 76svh;
         margin-right: auto;
         margin-left: auto;
+        overflow: hidden;
+        touch-action: pan-y;
       }
 
       .mobile-spatial-catalogue-image img {
@@ -1722,6 +1724,12 @@
         margin-left: auto;
         object-fit: contain;
         object-position: center;
+        transform: translate3d(var(--mobile-preview-x, 0), 0, 0);
+        transition: filter 0.3s ease, transform 180ms ease;
+        will-change: transform;
+      }
+
+      .mobile-spatial-catalogue-image.is-dragging img {
         transition: filter 0.3s ease;
       }
 
