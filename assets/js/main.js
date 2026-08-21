@@ -157,9 +157,7 @@
       const spatialGrid = nightJourneysProject.querySelector('.night-journeys-spatial-grid');
       const undercategories = nightJourneysProject.querySelectorAll('.list-dropdown-row[data-quick-view]');
 
-      [...undercategories]
-        .sort((a, b) => Number(a.hasAttribute('data-spatial-after-existing')) - Number(b.hasAttribute('data-spatial-after-existing')))
-        .forEach((row) => {
+      [...undercategories].forEach((row) => {
         const label = row.children[1]?.textContent.trim() || 'Night Journeys';
         const spatialSource = row.dataset.spatialImage || quickViewImages(row)[0];
         [spatialSource].filter(Boolean).forEach((source) => {
