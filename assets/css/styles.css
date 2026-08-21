@@ -1701,6 +1701,7 @@
         min-width: 0;
         min-height: var(--mobile-project-card-height);
         padding: 0.5rem 0;
+        overflow: hidden;
       }
 
       .mobile-spatial-catalogue-item[data-slideshow-index] {
@@ -1717,7 +1718,7 @@
         min-height: calc(var(--mobile-project-card-height) - 1rem);
         margin-right: auto;
         margin-left: auto;
-        overflow: hidden;
+        overflow: visible;
         touch-action: pan-y;
       }
 
