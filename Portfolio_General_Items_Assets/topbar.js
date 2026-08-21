@@ -1,5 +1,9 @@
 // Inject shared top bar and handle desktop dark mode toggle
 (function () {
+  document.querySelectorAll(
+    '.site-topbar, .topbar-nav, .topbar-header, .topbar-mobile-nav, .topbar-about, .topbar-switch'
+  ).forEach((element) => element.remove());
+
   const path = decodeURIComponent(window.location.pathname || '');
   const marker = '/Web Portfolio';
   const idx = path.indexOf(marker);
@@ -15,6 +19,7 @@
   const primaryLabel = isFonts ? 'Graphic Design' : 'Fonts';
 
   const TOPBAR_HTML = `
+    <div class="site-topbar" data-shared-topbar>
     <nav class="topbar-nav">
       <a href="${linkGraphic}">Graphic Design</a>
       <a href="${linkFonts}">Fonts</a>
@@ -28,14 +33,13 @@
     <button class="topbar-switch" id="sharedThemeSwitch" role="switch" aria-checked="false" aria-label="Toggle dark mode">
       <div class="topbar-knob" id="sharedKnob"></div>
     </button>
+    </div>
   `;
 
   const wrapper = document.createElement('div');
   wrapper.innerHTML = TOPBAR_HTML.trim();
   const frag = document.createDocumentFragment();
-  while (wrapper.firstChild) {
-    frag.appendChild(wrapper.firstChild);
-  }
+  while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
   document.body.appendChild(frag);
 
   const switchBtn = document.getElementById('sharedThemeSwitch');
