@@ -91,6 +91,11 @@
     const mobileSpatialCatalogue = document.querySelector('.mobile-spatial-catalogue');
     const mobileSlideshows = [];
     if (mobileSpatialCatalogue) {
+      const mobileIntro = document.createElement('p');
+      mobileIntro.className = 'mobile-spatial-intro-copy';
+      mobileIntro.textContent = 'I’m a freelance graphic designer based in Copenhagen, mainly working with visual identities, editorial design, typography, print and digital experiences. Using structure, systems and expressive type, I build distinct visual worlds. For collaborations or more info: mtsalkos@hotmail.com.';
+      mobileSpatialCatalogue.appendChild(mobileIntro);
+
       const curatedProjects = projects
         .filter((project) => project.hasAttribute('data-curated'))
         .sort((a, b) => Number(b.dataset.yearSort) - Number(a.dataset.yearSort));

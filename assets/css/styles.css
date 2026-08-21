@@ -1657,7 +1657,7 @@
 
     @media (max-width: 760px) {
       body:not(.list-view) {
-        --mobile-topbar-space: calc(9.5rem + env(safe-area-inset-top));
+        --mobile-topbar-space: calc(4rem + env(safe-area-inset-top));
         --mobile-project-card-height: calc((100svh - var(--mobile-topbar-space)) / 2);
       }
 
@@ -1668,6 +1668,19 @@
         width: 100%;
         padding: var(--mobile-topbar-space) 1rem 2rem;
         scroll-snap-align: start;
+      }
+
+      .mobile-spatial-intro-copy {
+        width: calc(100vw - 2rem);
+        max-width: 28rem;
+        margin: 0 0 1.8rem;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 500;
+        line-height: 1.16;
+        letter-spacing: 0;
+        text-wrap: balance;
+        mix-blend-mode: difference;
       }
 
       body:not(.list-view) {
