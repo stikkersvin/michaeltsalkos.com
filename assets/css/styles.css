@@ -1656,7 +1656,7 @@
       min-width: 0;
     }
 
-    body:not(.list-view) .night-journeys-spatial-item:nth-last-child(4) {
+    body:not(.list-view) .night-journeys-spatial-item:nth-last-child(5) {
       grid-column: 2;
     }
 
@@ -1689,7 +1689,7 @@
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
-      body:not(.list-view) .night-journeys-spatial-item:nth-last-child(4) {
+      body:not(.list-view) .night-journeys-spatial-item:nth-last-child(5) {
         grid-column: auto;
       }
     }
