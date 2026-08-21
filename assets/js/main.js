@@ -213,16 +213,10 @@
             window.setTimeout(() => {
               movePreviewImage(slideDirection < 0 ? 1 : -1);
               imageStage.classList.add('is-dragging');
-              imageStage.style.setProperty('--mobile-preview-x', `${-slideDirection * distance}px`);
-
+              imageStage.style.setProperty('--mobile-preview-x', '0px');
               window.requestAnimationFrame(() => {
-                window.requestAnimationFrame(() => {
-                  imageStage.classList.remove('is-dragging');
-                  imageStage.style.setProperty('--mobile-preview-x', '0px');
-                  window.setTimeout(() => {
-                    delete imageStage.dataset.isAnimating;
-                  }, 190);
-                });
+                imageStage.classList.remove('is-dragging');
+                delete imageStage.dataset.isAnimating;
               });
             }, reduceMotion.matches ? 0 : 180);
           };
