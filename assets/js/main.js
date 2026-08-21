@@ -94,6 +94,32 @@
       const curatedProjects = projects
         .filter((project) => project.hasAttribute('data-curated'))
         .sort((a, b) => Number(b.dataset.yearSort) - Number(a.dataset.yearSort));
+      let mobileCatalogueSwipeStartX = 0;
+      let mobileCatalogueSwipeStartY = 0;
+      let mobileCatalogueSwipeStartIndex = 0;
+
+      const mobileCatalogueItems = () => [...mobileSpatialCatalogue.querySelectorAll('.mobile-spatial-catalogue-item')];
+
+      function currentMobileCatalogueIndex() {
+        const items = mobileCatalogueItems();
+        if (!items.length) return 0;
+        return items.reduce((closestIndex, item, index) => (
+          Math.abs(item.offsetLeft - mobileSpatialCatalogue.scrollLeft)
+            < Math.abs(items[closestIndex].offsetLeft - mobileSpatialCatalogue.scrollLeft)
+            ? index
+            : closestIndex
+        ), 0);
+      }
+
+      function swipeToMobileCatalogueIndex(index) {
+        const items = mobileCatalogueItems();
+        if (!items.length) return;
+        const targetIndex = Math.max(0, Math.min(index, items.length - 1));
+        mobileSpatialCatalogue.scrollTo({
+          left: items[targetIndex].offsetLeft,
+          behavior: reduceMotion.matches ? 'auto' : 'smooth'
+        });
+      }
 
       curatedProjects.forEach((project) => {
         let slideshowImages = quickViewImages(project);
@@ -249,6 +275,24 @@
         item.append(imageStage, caption);
         mobileSpatialCatalogue.appendChild(item);
       });
+
+      mobileSpatialCatalogue.addEventListener('touchstart', (event) => {
+        if (!mobileViewport.matches || event.touches.length !== 1) return;
+        mobileCatalogueSwipeStartX = event.touches[0].clientX;
+        mobileCatalogueSwipeStartY = event.touches[0].clientY;
+        mobileCatalogueSwipeStartIndex = currentMobileCatalogueIndex();
+      }, { passive: true });
+
+      mobileSpatialCatalogue.addEventListener('touchend', (event) => {
+        if (!mobileViewport.matches || !event.changedTouches.length) return;
+        const deltaX = event.changedTouches[0].clientX - mobileCatalogueSwipeStartX;
+        const deltaY = event.changedTouches[0].clientY - mobileCatalogueSwipeStartY;
+        if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) {
+          swipeToMobileCatalogueIndex(currentMobileCatalogueIndex());
+          return;
+        }
+        swipeToMobileCatalogueIndex(mobileCatalogueSwipeStartIndex + (deltaX < 0 ? 1 : -1));
+      }, { passive: true });
     }
 
     projects.forEach((project) => {
