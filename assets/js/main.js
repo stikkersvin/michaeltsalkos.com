@@ -162,7 +162,7 @@
         }
         queueMobileProjectWidth();
 
-        if (itemImages.length > 1) {
+        if (itemImages.length > 1 && !mobileViewport.matches) {
           let previewIndex = Math.max(0, itemImages.indexOf(source));
           const updatePreviewImage = () => {
             image.src = itemImages[previewIndex];
