@@ -20,6 +20,7 @@
       <a href="${linkFonts}">Fonts</a>
     </nav>
     <header class="topbar-header"><a href="${linkGraphic}">MICHAEL TSALKOS™</a></header>
+    <p class="topbar-intro">I’m a freelance graphic designer based in Copenhagen, mainly working with visual identities, editorial design, typography, print and digital experiences. Using structure, systems and expressive type, I build distinct visual worlds. For collaborations or more info: mtsalkos@hotmail.com.</p>
     <nav class="topbar-mobile-nav">
       <a href="${primaryLink}">${primaryLabel}</a>
       <a href="${linkAbout}">About</a>

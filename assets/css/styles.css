@@ -1657,7 +1657,7 @@
 
     @media (max-width: 760px) {
       body:not(.list-view) {
-        --mobile-topbar-space: calc(4rem + env(safe-area-inset-top));
+        --mobile-topbar-space: calc(9.5rem + env(safe-area-inset-top));
         --mobile-project-card-height: calc((100svh - var(--mobile-topbar-space)) / 2);
       }
 

@@ -2,6 +2,7 @@
 .topbar-nav,
 .topbar-mobile-nav,
 .topbar-header,
+.topbar-intro,
 .topbar-about,
 .topbar-switch {
   mix-blend-mode: difference;
@@ -52,6 +53,10 @@
 }
 
 .topbar-mobile-nav {
+  display: none;
+}
+
+.topbar-intro {
   display: none;
 }
 
@@ -120,6 +125,21 @@
 
   .topbar-nav {
     display: none;
+  }
+
+  .topbar-intro {
+    position: fixed;
+    top: calc(var(--topbar-visual-offset, 0px) + env(safe-area-inset-top) + 2.05rem);
+    left: 1rem;
+    z-index: 10010;
+    display: block;
+    width: calc(100vw - 2rem);
+    max-width: 28rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.16;
+    letter-spacing: 0;
+    text-wrap: balance;
   }
 
   .topbar-about,
