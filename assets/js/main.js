@@ -94,32 +94,6 @@
       const curatedProjects = projects
         .filter((project) => project.hasAttribute('data-curated'))
         .sort((a, b) => Number(b.dataset.yearSort) - Number(a.dataset.yearSort));
-      let mobileCatalogueSwipeStartX = 0;
-      let mobileCatalogueSwipeStartY = 0;
-      let mobileCatalogueSwipeStartIndex = 0;
-
-      const mobileCatalogueItems = () => [...mobileSpatialCatalogue.querySelectorAll('.mobile-spatial-catalogue-item')];
-
-      function currentMobileCatalogueIndex() {
-        const items = mobileCatalogueItems();
-        if (!items.length) return 0;
-        return items.reduce((closestIndex, item, index) => (
-          Math.abs(item.offsetLeft - mobileSpatialCatalogue.scrollLeft)
-            < Math.abs(items[closestIndex].offsetLeft - mobileSpatialCatalogue.scrollLeft)
-            ? index
-            : closestIndex
-        ), 0);
-      }
-
-      function swipeToMobileCatalogueIndex(index) {
-        const items = mobileCatalogueItems();
-        if (!items.length) return;
-        const targetIndex = Math.max(0, Math.min(index, items.length - 1));
-        mobileSpatialCatalogue.scrollTo({
-          left: items[targetIndex].offsetLeft,
-          behavior: reduceMotion.matches ? 'auto' : 'smooth'
-        });
-      }
 
       curatedProjects.forEach((project) => {
         let slideshowImages = quickViewImages(project);
@@ -188,7 +162,7 @@
         }
         queueMobileProjectWidth();
 
-        if (itemImages.length > 1 && !mobileViewport.matches) {
+        if (itemImages.length > 1) {
           let previewIndex = Math.max(0, itemImages.indexOf(source));
           const updatePreviewImage = () => {
             image.src = itemImages[previewIndex];
@@ -199,34 +173,38 @@
             previewIndex = (previewIndex + direction + itemImages.length) % itemImages.length;
             updatePreviewImage();
           };
-          const previousButton = document.createElement('button');
-          previousButton.className = 'mobile-spatial-preview-arrow mobile-spatial-preview-previous';
-          previousButton.type = 'button';
-          previousButton.setAttribute('aria-label', `Previous ${name} image`);
+          if (!mobileViewport.matches) {
+            const previousButton = document.createElement('button');
+            previousButton.className = 'mobile-spatial-preview-arrow mobile-spatial-preview-previous';
+            previousButton.type = 'button';
+            previousButton.setAttribute('aria-label', `Previous ${name} image`);
 
-          const nextButton = document.createElement('button');
-          nextButton.className = 'mobile-spatial-preview-arrow mobile-spatial-preview-next';
-          nextButton.type = 'button';
-          nextButton.setAttribute('aria-label', `Next ${name} image`);
+            const nextButton = document.createElement('button');
+            nextButton.className = 'mobile-spatial-preview-arrow mobile-spatial-preview-next';
+            nextButton.type = 'button';
+            nextButton.setAttribute('aria-label', `Next ${name} image`);
 
-          previousButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            movePreviewImage(-1);
-          });
+            previousButton.addEventListener('click', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              movePreviewImage(-1);
+            });
 
-          nextButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            movePreviewImage(1);
-          });
+            nextButton.addEventListener('click', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              movePreviewImage(1);
+            });
 
-          imageStage.addEventListener('click', (event) => {
-            if (event.target.closest('.mobile-spatial-preview-arrow')) return;
-            const rect = imageStage.getBoundingClientRect();
-            const direction = event.clientX < rect.left + rect.width / 2 ? -1 : 1;
-            movePreviewImage(direction);
-          });
+            imageStage.addEventListener('click', (event) => {
+              if (event.target.closest('.mobile-spatial-preview-arrow')) return;
+              const rect = imageStage.getBoundingClientRect();
+              const direction = event.clientX < rect.left + rect.width / 2 ? -1 : 1;
+              movePreviewImage(direction);
+            });
+
+            imageStage.append(previousButton, nextButton);
+          }
 
           let touchStartX = 0;
           let touchStartY = 0;
@@ -256,7 +234,6 @@
             movePreviewImage(deltaX < 0 ? 1 : -1);
           });
 
-          imageStage.append(previousButton, nextButton);
         }
 
         const caption = document.createElement('figcaption');
@@ -276,23 +253,6 @@
         mobileSpatialCatalogue.appendChild(item);
       });
 
-      mobileSpatialCatalogue.addEventListener('touchstart', (event) => {
-        if (!mobileViewport.matches || event.touches.length !== 1) return;
-        mobileCatalogueSwipeStartX = event.touches[0].clientX;
-        mobileCatalogueSwipeStartY = event.touches[0].clientY;
-        mobileCatalogueSwipeStartIndex = currentMobileCatalogueIndex();
-      }, { passive: true });
-
-      mobileSpatialCatalogue.addEventListener('touchend', (event) => {
-        if (!mobileViewport.matches || !event.changedTouches.length) return;
-        const deltaX = event.changedTouches[0].clientX - mobileCatalogueSwipeStartX;
-        const deltaY = event.changedTouches[0].clientY - mobileCatalogueSwipeStartY;
-        if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) {
-          swipeToMobileCatalogueIndex(currentMobileCatalogueIndex());
-          return;
-        }
-        swipeToMobileCatalogueIndex(mobileCatalogueSwipeStartIndex + (deltaX < 0 ? 1 : -1));
-      }, { passive: true });
     }
 
     projects.forEach((project) => {

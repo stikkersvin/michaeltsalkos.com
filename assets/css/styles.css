@@ -1656,28 +1656,13 @@
     }
 
     @media (max-width: 760px) {
-      body:not(.list-view) .scroll-cue {
-        display: none;
-      }
-
       body:not(.list-view) .mobile-spatial-catalogue {
         display: flex;
-        flex-direction: row;
-        gap: 0;
+        flex-direction: column;
+        gap: 4rem;
         width: 100%;
-        height: 100svh;
-        padding: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
+        padding: 0 1rem 5rem;
         scroll-snap-align: start;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-      }
-
-      body:not(.list-view) .mobile-spatial-catalogue::-webkit-scrollbar {
-        display: none;
       }
 
       body:not(.list-view) {
@@ -1692,7 +1677,7 @@
         height: 100svh;
         min-height: 100svh;
         overflow-x: hidden;
-        overflow-y: hidden;
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: contain;
         scroll-behavior: smooth;
@@ -1707,13 +1692,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        flex: 0 0 100%;
-        width: 100%;
-        min-width: 100%;
-        min-height: 100svh;
-        padding: 0 1rem 4rem;
-        scroll-snap-align: center;
-        scroll-snap-stop: always;
+        min-width: 0;
+        min-height: calc(100svh - 4rem);
       }
 
       .mobile-spatial-catalogue-item[data-slideshow-index] {
