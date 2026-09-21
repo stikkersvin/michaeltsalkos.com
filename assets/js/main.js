@@ -1011,7 +1011,8 @@
         });
       }
 
-      const orderedProjects = [...projects].sort((a, b) => Number(b.dataset.yearSort) - Number(a.dataset.yearSort));
+      const sortValue = (project) => Number(isList && project.dataset.listSort ? project.dataset.listSort : project.dataset.yearSort);
+      const orderedProjects = [...projects].sort((a, b) => sortValue(b) - sortValue(a));
 
       orderedProjects.forEach((project) => workGrid.appendChild(project));
       viewButtons.forEach((button) => {
