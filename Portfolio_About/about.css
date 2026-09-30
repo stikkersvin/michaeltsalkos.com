@@ -309,7 +309,7 @@ body.dark .experience-toggle button[aria-selected="false"] {
   max-width: 18rem;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 760px) and (pointer: coarse) {
   main {
     display: block;
     min-height: auto;

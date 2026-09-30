@@ -10,7 +10,7 @@
     document.body.appendChild(quickViewLoader);
     const scrollCue = document.querySelector('.scroll-cue');
     const spatialIntro = document.querySelector('.spatial-intro');
-    const mobileViewport = window.matchMedia('(max-width: 760px)');
+    const mobileViewport = window.matchMedia('(max-width: 760px) and (pointer: coarse)');
     const oDaysProject = document.querySelector('[data-display-type="O Days|Volunteer|Merchandise"]');
     const godFootballProject = document.querySelector('[data-display-type="God I Love|Football|"]');
     const nightJourneysProject = document.querySelector('[data-display-type="Night|Journeys|"]');
@@ -605,7 +605,7 @@
       if (!project.hasAttribute('data-slideshow-index')) return;
       project.addEventListener('click', (event) => {
         if (document.body.classList.contains('list-view')) return;
-        if (window.matchMedia('(max-width: 760px)').matches) return;
+        if (window.matchMedia('(max-width: 760px) and (pointer: coarse)').matches) return;
         const clickedImage = event.target.closest('img');
         if (!clickedImage || !project.contains(clickedImage)) return;
         event.preventDefault();
@@ -811,7 +811,7 @@
             shirtPair.dataset.stickyStart = String(window.scrollY + shirtPair.getBoundingClientRect().top);
           }
           const stickyStart = Number(shirtPair.dataset.stickyStart);
-          const isMobile = window.matchMedia('(max-width: 760px)').matches;
+          const isMobile = window.matchMedia('(max-width: 760px) and (pointer: coarse)').matches;
 
           if (isMobile) {
             const rotationStart = stickyStart + viewportHeight * 0.35;
@@ -861,7 +861,7 @@
         }
       }
 
-      if (godFootballProject && !window.matchMedia('(max-width: 760px)').matches) {
+      if (godFootballProject && !window.matchMedia('(max-width: 760px) and (pointer: coarse)').matches) {
         const stickyImage = godFootballProject.querySelector('.spatial-stack-image-sticky');
         if (stickyImage) {
           const stack = godFootballProject.querySelector('.spatial-stack-images');
@@ -886,7 +886,7 @@
         }
       }
 
-      if (homeShirtProject && !window.matchMedia('(max-width: 760px)').matches) {
+      if (homeShirtProject && !window.matchMedia('(max-width: 760px) and (pointer: coarse)').matches) {
         const stack = homeShirtProject.querySelector('.home-shirt-spatial-flip');
         const card = homeShirtProject.querySelector('.home-shirt-flip-card');
         if (stack && card) {
