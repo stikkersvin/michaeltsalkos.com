@@ -1,3 +1,7 @@
+html {
+  scrollbar-gutter: stable;
+}
+
 .site-topbar {
   color: #fff;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
