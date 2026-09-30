@@ -852,10 +852,10 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 18svh;
+        gap: 8svh;
         width: 100%;
-        margin-top: 60svh;
-        padding-bottom: 40svh;
+        margin-top: 20svh;
+        padding-bottom: 15svh;
         pointer-events: none;
       }
 
@@ -950,8 +950,8 @@
 
       body:not(.list-view) .project[data-display-type="First Things|First *(2026)"] .spatial-stack-images {
         align-items: stretch;
-        gap: 80svh;
-        min-height: 260svh;
+        gap: 40svh;
+        min-height: 170svh;
       }
 
       body:not(.list-view) .project[data-display-type="First Things|First *(2026)"]::before {
@@ -981,7 +981,7 @@
       }
 
       body:not(.list-view) .project[data-display-type="O Days|Volunteer|Merchandise"] .spatial-stack-images {
-        min-height: 430svh;
+        min-height: 250svh;
       }
 
       body:not(.list-view) .project[data-display-type="O Days|Volunteer|Merchandise"] .o-days-shirt-pair {
