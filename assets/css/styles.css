@@ -17,6 +17,10 @@
       min-height: 100%;
     }
 
+    html {
+      scrollbar-gutter: stable;
+    }
+
     body {
       background: var(--page);
       color: var(--ink);
