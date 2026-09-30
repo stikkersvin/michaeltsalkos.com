@@ -981,7 +981,7 @@
       }
 
       body:not(.list-view) .project[data-display-type="O Days|Volunteer|Merchandise"] .spatial-stack-images {
-        min-height: 250svh;
+        min-height: 430svh;
       }
 
       body:not(.list-view) .project[data-display-type="O Days|Volunteer|Merchandise"] .o-days-shirt-pair {
