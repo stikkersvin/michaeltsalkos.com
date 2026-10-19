@@ -232,6 +232,83 @@
       previewVideoObserver.observe(video);
       return video;
     }
+    function mountVideoSlides(container, firstVideo, videoSource, stillImages, name) {
+      const sources = [videoSource, ...stillImages];
+      let index = 0;
+      let current = firstVideo;
+      let loadId = 0;
+      let outgoing = null;
+      firstVideo.poster = stillImages[0];
+      container.classList.add('mixed-project-preview');
+      container.tabIndex = 0;
+      container.dataset.cursorDirection = 'next';
+      container.setAttribute('aria-label', `${name}. Left and Right browse video and images.`);
+      const counter = document.createElement('span');
+      counter.className = 'spatial-project-counter mixed-preview-counter';
+      counter.setAttribute('aria-live', 'polite');
+      const updateCounter = () => { counter.textContent = `${index + 1} / ${sources.length}`; };
+      const stopVideo = (media) => {
+        if (media?.tagName !== 'VIDEO') return;
+        media.pause();
+        previewVideoObserver.unobserve(media);
+      };
+      const move = async (direction) => {
+        const nextIndex = (index + direction + sources.length) % sources.length;
+        const request = ++loadId;
+        const isVideo = nextIndex === 0;
+        const next = isVideo ? createPreviewVideo(videoSource, name, { eager: true }) : new Image();
+        if (isVideo) {
+          next.poster = stillImages[0];
+          await new Promise((resolve) => {
+            next.addEventListener('loadeddata', resolve, { once: true });
+            next.addEventListener('error', resolve, { once: true });
+            next.load();
+          });
+        } else {
+          next.src = sources[nextIndex];
+          next.alt = `${name}, image ${nextIndex}`;
+          next.draggable = false;
+          await next.decode().catch(() => {});
+        }
+        if (request !== loadId) { stopVideo(next); return; }
+        stopVideo(current);
+        stopVideo(outgoing);
+        outgoing?.getAnimations().forEach((animation) => animation.cancel());
+        outgoing?.remove();
+        current.getAnimations().forEach((animation) => animation.cancel());
+        const previous = current;
+        previous.replaceWith(next);
+        current = next;
+        index = nextIndex;
+        updateCounter();
+        if (reduceMotion.matches) return;
+        outgoing = previous;
+        previous.classList.add('spatial-project-outgoing');
+        previous.setAttribute('aria-hidden', 'true');
+        container.insertBefore(previous, next.nextSibling);
+        const distance = container.getBoundingClientRect().width;
+        const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+        next.animate([{ transform: `translateX(${direction * distance}px)` }, { transform: 'translateX(0)' }], timing);
+        previous.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${-direction * distance}px)` }],
+          { ...timing, fill: 'forwards' }).finished.then(() => previous.remove(), () => previous.remove());
+      };
+      const directionAt = (event) => {
+        const bounds = container.getBoundingClientRect();
+        return event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
+      };
+      container.addEventListener('pointermove', (event) => {
+        if (event.pointerType !== 'touch') container.dataset.cursorDirection = directionAt(event) < 0 ? 'previous' : 'next';
+      });
+      container.addEventListener('click', (event) => { event.stopPropagation(); move(directionAt(event)); });
+      container.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        move(event.key === 'ArrowLeft' ? -1 : 1);
+      });
+      updateCounter();
+      container.appendChild(counter);
+    }
     if (mobileSpatialCatalogue) {
       const mobileIntro = document.createElement('p');
       mobileIntro.className = 'mobile-spatial-intro-copy';
@@ -278,7 +355,7 @@
         if (project === nightJourneysProject) {
           project.dataset.slideshowIndex = String(mobileSlideshows.length);
         }
-        const itemImages = videoSource ? [] : slideshowImages.length ? slideshowImages : [source];
+        const itemImages = slideshowImages.length ? slideshowImages : videoSource ? [] : [source];
         mobileSlideshows.push({
           name,
           images: itemImages,
@@ -295,6 +372,7 @@
           image.decoding = 'async';
         }
         imageStage.appendChild(image);
+        if (videoSource && itemImages.length) mountVideoSlides(imageStage, image, videoSource, itemImages, name);
         let mobileProjectWidthFrame = null;
         const syncMobileProjectWidth = () => {
           mobileProjectWidthFrame = null;
@@ -315,7 +393,7 @@
         }
         queueMobileProjectWidth();
 
-        if (itemImages.length > 1) {
+        if (!videoSource && itemImages.length > 1) {
           let previewIndex = Math.max(0, itemImages.indexOf(source));
           const previewTrack = document.createElement('span');
           previewTrack.className = 'mobile-spatial-preview-track';
@@ -478,18 +556,13 @@
     spatialProjectGrid.setAttribute('aria-label', 'Selected projects');
     const spatialRowLayouts = [[2, 2], [3, 1], [4], [1, 3]];
     const spatialCovers = [...mobileSpatialCatalogue?.querySelectorAll('.mobile-spatial-catalogue-item') || []];
-    const houndstoothCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'Houndstooth||');
-    const oDaysCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'O Days|Volunteer|Merchandise');
-    if (houndstoothCoverIndex >= 0 && oDaysCoverIndex >= 0) {
-      [spatialCovers[oDaysCoverIndex], spatialCovers[houndstoothCoverIndex]] =
-        [spatialCovers[houndstoothCoverIndex], spatialCovers[oDaysCoverIndex]];
-    }
-    const footballCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'God I Love|Football|');
-    const shirtCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'O Days|Volunteer|Merchandise');
-    if (footballCoverIndex >= 0 && shirtCoverIndex >= 0) {
-      [spatialCovers[footballCoverIndex], spatialCovers[shirtCoverIndex]] =
-        [spatialCovers[shirtCoverIndex], spatialCovers[footballCoverIndex]];
-    }
+    // Keep the established opening pairs together as new projects are added.
+    const openingProjects = ['Night|Journeys|', 'O Days|Volunteer|Merchandise', 'Houndstooth||', 'God I Love|Football|'];
+    const openingRank = (item) => {
+      const index = openingProjects.indexOf(item.dataset.displayType);
+      return index < 0 ? openingProjects.length : index;
+    };
+    spatialCovers.sort((a, b) => openingRank(a) - openingRank(b));
     let spatialCoverIndex = 0;
     let spatialRowIndex = 0;
     const containedCoverStart = spatialCovers.findIndex((item) => item.dataset.displayType === 'Houndstooth||');
@@ -515,7 +588,7 @@
         const useContainedImage = cover.dataset.displayType === 'Night|Journeys|'
           || (containedCoverStart >= 0 && spatialCoverIndex - 1 >= containedCoverStart
             && cover.dataset.displayType !== 'A Pattern|Language|');
-        cover.classList.toggle('spatial-project-contained', useContainedImage && !frameSlideshow.video);
+        cover.classList.toggle('spatial-project-contained', useContainedImage && (!frameSlideshow.video || frameSlideshow.images.length > 0));
         let frameImageIndex = Number(sourceItem.dataset.slideshowImageIndex) || 0;
         cover.setAttribute('role', 'group');
         cover.setAttribute('aria-roledescription', frameSlideshow.video ? 'video preview' : 'slideshow');
@@ -535,7 +608,10 @@
         caption.className = 'spatial-project-caption';
         caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
         cover.append(image, caption);
-        if (frameSlideshow.images.length > 1) {
+        if (frameSlideshow.video && frameSlideshow.images.length) {
+          mountVideoSlides(cover, image, frameSlideshow.video, frameSlideshow.images, frameSlideshow.name);
+        }
+        if (!frameSlideshow.video && frameSlideshow.images.length > 1) {
           const isNightJourneys = cover.dataset.displayType === 'Night|Journeys|';
           const isODays = cover.dataset.displayType === 'O Days|Volunteer|Merchandise';
           const hasAutoplay = isNightJourneys || isODays;
@@ -953,6 +1029,28 @@
       if (direction === 'up' || direction === 'down') moveAllProject(direction === 'up' ? -1 : 1);
       else if (direction) moveAllPreview(direction === 'previous' ? -1 : 1);
     });
+    let previewWheelTime = 0;
+    let previewWheelDelta = 0;
+    let previewWheelConsumed = false;
+    allPreviewMedia.addEventListener('wheel', (event) => {
+      if (!document.body.classList.contains('list-view') || event.ctrlKey
+        || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      const now = performance.now();
+      // Treat a trackpad gesture and its momentum as one project change.
+      if (now - previewWheelTime > 180) {
+        previewWheelDelta = 0;
+        previewWheelConsumed = false;
+      }
+      previewWheelTime = now;
+      if (previewWheelConsumed) return;
+      const unit = event.deltaMode === 1 ? 16
+        : event.deltaMode === 2 ? allPreviewMedia.clientHeight : 1;
+      previewWheelDelta += event.deltaY * unit;
+      if (Math.abs(previewWheelDelta) < 40) return;
+      previewWheelConsumed = true;
+      moveAllProject(previewWheelDelta > 0 ? 1 : -1);
+    }, { passive: false });
     allPreviewMedia.addEventListener('keydown', (event) => {
       if (allPreviewMedia.dataset.canBrowse !== 'true' || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
       event.preventDefault();
@@ -967,12 +1065,11 @@
 
     async function renderAllPreviewMedia(direction = 1, motion = 'vertical') {
       const loadId = ++allPreviewLoadId;
-      const videoSource = activeAllSource?.dataset.previewVideo;
-      const source = videoSource || allPreviewImages[allPreviewIndex];
+      const source = allPreviewImages[allPreviewIndex];
       const name = allPreviewHeading.textContent;
       const index = allPreviewIndex;
       const count = allPreviewImages.length;
-      const canBrowse = !videoSource && source && !/\.(mp4|mov|webm)(?:\?|$)/i.test(source) && allPreviewImages.length > 1;
+      const canBrowse = source && allPreviewImages.length > 1;
       allPreviewMedia.tabIndex = 0;
       allPreviewMedia.dataset.canBrowse = String(Boolean(canBrowse));
       if (allPreviewPointer) updateAllPreviewCursor(allPreviewPointer);
@@ -986,7 +1083,7 @@
         allPreviewMedia.replaceChildren();
         return;
       }
-      const isVideo = videoSource || /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
+      const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
       const media = isVideo ? createPreviewVideo(source, name, { eager: true }) : document.createElement('img');
       if (isVideo) {
         media.preload = 'auto';
@@ -1035,7 +1132,7 @@
           ], { ...timing, fill: 'forwards' }).finished.then(() => outgoing.remove(), () => outgoing.remove());
         }
       }
-      if (!isVideo && count > 1) {
+      if (count > 1) {
         const counter = document.createElement('span');
         counter.className = 'all-preview-counter';
         counter.textContent = `${index + 1} / ${count}`;
@@ -1059,6 +1156,7 @@
         allPreviewImages = [...project.querySelectorAll('.list-dropdown-gallery img, .list-dropdown-gallery-ftf img')]
           .map((image) => image.getAttribute('src')).filter(Boolean);
       }
+      if (source.dataset.previewVideo) allPreviewImages.unshift(source.dataset.previewVideo);
       const cells = project.querySelectorAll(':scope > .list-row > span');
       allPreviewHeading.textContent = source === project
         ? cells[1]?.textContent.trim() || 'Project'

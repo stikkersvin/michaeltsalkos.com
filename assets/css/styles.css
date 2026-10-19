@@ -2128,6 +2128,29 @@
       background: #000;
     }
 
+    .mixed-project-preview {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mixed-preview-counter {
+      position: absolute;
+      right: 1rem;
+      bottom: 1.25rem;
+      color: #fff;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      mix-blend-mode: difference;
+      pointer-events: none;
+    }
+
+    .mobile-spatial-catalogue-image.mixed-project-preview > .spatial-project-outgoing {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
     @media (min-width: 761px), (pointer: fine) {
       body:not(.list-view) .work-grid {
         display: block;
@@ -2268,7 +2291,8 @@
         background: #000;
       }
 
-      .spatial-project-cover.spatial-project-contained > img {
+      .spatial-project-cover.spatial-project-contained > img,
+      .spatial-project-cover.spatial-project-contained > video {
         width: 80%;
         height: 80%;
         object-fit: contain;
