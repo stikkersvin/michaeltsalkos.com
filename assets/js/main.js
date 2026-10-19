@@ -65,7 +65,7 @@
 
     if (oDaysProject) {
       const images = quickViewImages(oDaysProject);
-      const openingPhotos = images.filter((source) => /ODAYS_Instagram_[6-9]\.jpg$/.test(source));
+      const openingPhotos = images.filter((source) => /ODAYS_Instagram_[6-9](?:\.preview)?\.(?:jpg|webp)$/.test(source));
       const openingPhoto = openingPhotos[Math.floor(Math.random() * openingPhotos.length)];
       if (openingPhoto) {
         const remainingImages = images.filter((source) => source !== openingPhoto);
@@ -208,21 +208,26 @@
     const mobileSlideshows = [];
     const previewVideoObserver = new IntersectionObserver((entries) => {
       entries.forEach(({ target, isIntersecting }) => {
-        if (isIntersecting && !document.hidden) target.play().catch(() => {});
+        if (isIntersecting && !document.hidden) {
+          if (!target.getAttribute('src')) target.src = target.dataset.previewSource;
+          target.autoplay = true;
+          target.play().catch(() => {});
+        }
         else target.pause();
       });
     }, { threshold: 0.1 });
-    function createPreviewVideo(source, name) {
+    function createPreviewVideo(source, name, { eager = false } = {}) {
       const video = document.createElement('video');
-      video.src = source;
+      video.dataset.previewSource = source;
+      if (eager) video.src = source;
       video.muted = true;
       video.defaultMuted = true;
       video.volume = 0;
-      video.autoplay = true;
+      video.autoplay = eager;
       video.loop = true;
       video.playsInline = true;
       video.controls = false;
-      video.preload = 'metadata';
+      video.preload = eager ? 'auto' : 'none';
       video.setAttribute('aria-label', `${name} video preview`);
       previewVideoObserver.observe(video);
       return video;
@@ -299,6 +304,7 @@
           }
         };
         const queueMobileProjectWidth = () => {
+          if (!mobileViewport.matches) return;
           if (mobileProjectWidthFrame !== null) return;
           mobileProjectWidthFrame = window.requestAnimationFrame(syncMobileProjectWidth);
         };
@@ -515,7 +521,8 @@
         } else {
           image.src = frameSlideshow.images[frameImageIndex];
           image.alt = `${frameSlideshow.name}, image ${frameImageIndex + 1} of ${frameSlideshow.images.length}`;
-          image.loading = spatialCoverIndex <= 2 ? 'eager' : 'lazy';
+          image.loading = 'lazy';
+          if (spatialCoverIndex <= 2) image.fetchPriority = 'high';
           image.decoding = 'async';
           image.draggable = false;
         }
@@ -937,7 +944,7 @@
         return;
       }
       const isVideo = videoSource || /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
-      const media = isVideo ? createPreviewVideo(source, name) : document.createElement('img');
+      const media = isVideo ? createPreviewVideo(source, name, { eager: true }) : document.createElement('img');
       if (isVideo) {
         media.preload = 'auto';
         await new Promise((resolve) => {
@@ -1639,13 +1646,19 @@
     }
     setView(initialView);
 
+    const defaultDisplayType = document.querySelector('.display-type-default');
+    let displayPointerFrame = null;
+    let displayPointerX = 0;
+    let displayPointerY = 0;
     window.addEventListener('pointermove', (event) => {
-      if (reduceMotion.matches) return;
-      const x = (event.clientX / window.innerWidth - 0.5) * -12;
-      const y = (event.clientY / window.innerHeight - 0.5) * -8;
-      displayTypes.forEach((displayType) => {
-        displayType.style.setProperty('--move-x', `${x.toFixed(2)}px`);
-        displayType.style.setProperty('--move-y', `${y.toFixed(2)}px`);
+      if (reduceMotion.matches || document.body.classList.contains('list-view') || !defaultDisplayType) return;
+      displayPointerX = (event.clientX / window.innerWidth - 0.5) * -12;
+      displayPointerY = (event.clientY / window.innerHeight - 0.5) * -8;
+      if (displayPointerFrame !== null) return;
+      displayPointerFrame = window.requestAnimationFrame(() => {
+        displayPointerFrame = null;
+        defaultDisplayType.style.setProperty('--move-x', `${displayPointerX.toFixed(2)}px`);
+        defaultDisplayType.style.setProperty('--move-y', `${displayPointerY.toFixed(2)}px`);
       });
     }, { passive: true });
 

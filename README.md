@@ -38,3 +38,11 @@ The deploy entry point is:
 ```txt
 index.html
 ```
+
+## Preview images
+
+The front page uses smaller `.preview.webp` copies; original project images stay in place.
+After adding new PNG/JPEG previews, install Pillow in a development environment and run
+`python3 scripts/optimize-previews.py` from the repository root. The script preserves
+transparency, limits previews to 2000 pixels on their longest edge, and only substitutes
+files that are at least 10% smaller. Commit the generated WebP files with `index.html`.
