@@ -2261,14 +2261,14 @@
         cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'%3E%3Cpath d='M5 16h22M18 7l9 9-9 9' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 16h22M18 7l9 9-9 9' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, e-resize;
       }
 
-      .spatial-project-cover[data-display-type="Night|Journeys|"] {
+      .spatial-project-cover.spatial-project-contained {
         display: flex;
         align-items: center;
         justify-content: center;
         background: #000;
       }
 
-      .spatial-project-cover[data-display-type="Night|Journeys|"] > img {
+      .spatial-project-cover.spatial-project-contained > img {
         width: 80%;
         height: 80%;
         object-fit: contain;
@@ -2281,7 +2281,7 @@
         pointer-events: none;
       }
 
-      .spatial-project-cover[data-display-type="Night|Journeys|"] > .spatial-project-outgoing {
+      .spatial-project-cover.spatial-project-contained > .spatial-project-outgoing {
         top: 10%;
         left: 10%;
       }

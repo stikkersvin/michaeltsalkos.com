@@ -492,6 +492,7 @@
     }
     let spatialCoverIndex = 0;
     let spatialRowIndex = 0;
+    const containedCoverStart = spatialCovers.findIndex((item) => item.dataset.displayType === 'Houndstooth||');
     while (spatialCoverIndex < spatialCovers.length) {
       const row = document.createElement('div');
       row.className = 'spatial-project-row';
@@ -511,6 +512,10 @@
         cover.dataset.displayType = sourceItem.dataset.displayType;
         const slideshowIndex = Number(sourceItem.dataset.slideshowIndex);
         const frameSlideshow = mobileSlideshows[slideshowIndex];
+        const useContainedImage = cover.dataset.displayType === 'Night|Journeys|'
+          || (containedCoverStart >= 0 && spatialCoverIndex - 1 >= containedCoverStart
+            && cover.dataset.displayType !== 'A Pattern|Language|');
+        cover.classList.toggle('spatial-project-contained', useContainedImage && !frameSlideshow.video);
         let frameImageIndex = Number(sourceItem.dataset.slideshowImageIndex) || 0;
         cover.setAttribute('role', 'group');
         cover.setAttribute('aria-roledescription', frameSlideshow.video ? 'video preview' : 'slideshow');
