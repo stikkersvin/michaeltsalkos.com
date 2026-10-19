@@ -74,7 +74,7 @@
       background: transparent;
       color: inherit;
       cursor: pointer;
-      font: 500 0.72rem/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font: 500 0.75rem/1 "Helvetica Neue", Helvetica, Arial, sans-serif;
       letter-spacing: 0.01em;
       opacity: 0.38;
       padding: 0;
@@ -294,7 +294,7 @@
 
     body.list-view .list-header {
       padding-bottom: 1rem;
-      font-size: 9pt;
+      font-size: 0.75rem;
       text-transform: uppercase;
       opacity: 0.45;
     }
@@ -339,7 +339,7 @@
 
     body.list-view .list-row span {
       min-width: 0;
-      font-size: 12pt;
+      font-size: 0.75rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -381,7 +381,7 @@
 
     body.list-view .list-dropdown-row span {
       min-width: 0;
-      font-size: 12pt;
+      font-size: 0.75rem;
     }
 
     body.list-view .list-dropdown-row[data-quick-view]:hover {
@@ -638,7 +638,7 @@
       display: block;
       height: auto;
       min-height: 0;
-      font-size: 0.9rem;
+      font-size: 0.75rem;
       line-height: 1.25;
       overflow-y: visible;
       scrollbar-width: none;
@@ -1949,7 +1949,7 @@
       body.list-view .list-row span:nth-child(3),
       body.list-view .list-row span:nth-child(4) {
         margin-top: 0.2rem;
-        font-size: 10pt;
+        font-size: 0.75rem;
         opacity: 0.58;
       }
 
@@ -2101,9 +2101,459 @@
       }
     }
 
+    body.list-view .list-dropdown-detail a,
+    body.list-view .list-dropdown-copy-description a {
+      color: #0000ee;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+
+    .spatial-project-grid {
+      display: none;
+    }
+
+    .list-dropdown-gallery-video > video {
+      grid-column: 1 / -1;
+      display: block;
+      width: 100%;
+      max-height: 80svh;
+      background: #000;
+    }
+
+    .mobile-spatial-catalogue-image > video {
+      display: block;
+      width: 100%;
+      max-height: calc(var(--mobile-project-card-height, 50svh) - 1rem);
+      object-fit: contain;
+      background: #000;
+    }
+
+    @media (min-width: 761px), (pointer: fine) {
+      body:not(.list-view) .work-grid {
+        display: block;
+        height: auto;
+        min-height: 100svh;
+        padding: 0;
+        overflow: visible;
+        isolation: auto;
+      }
+
+      body:not(.list-view) .work-grid > .project,
+      body:not(.list-view) .work-grid > .display-type-project,
+      body:not(.list-view) .work-grid > .spatial-intro {
+        display: none !important;
+      }
+
+      body:not(.list-view) .display-type-default {
+        display: flex;
+        z-index: 30000;
+        opacity: 0.05;
+      }
+
+      body:not(.list-view) .spatial-project-grid {
+        display: block;
+        width: 100%;
+      }
+
+      .spatial-project-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        height: 100svh;
+        min-height: 30rem;
+      }
+
+      .spatial-project-row.is-resizable {
+        grid-template-columns: minmax(0, var(--frame-split)) minmax(0, 1fr);
+      }
+
+      .spatial-project-row.is-resizable > .spatial-project-cover {
+        grid-column: auto;
+      }
+
+      .spatial-project-divider {
+        position: absolute;
+        z-index: 3;
+        top: 0;
+        bottom: 0;
+        left: var(--frame-split);
+        width: 20px;
+        transform: translateX(-50%);
+        cursor: col-resize;
+        touch-action: none;
+      }
+
+      .spatial-project-divider::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        height: 3rem;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        box-shadow: 0 0 2px #000;
+        opacity: 0.4;
+      }
+
+      .spatial-project-divider:hover::after,
+      .spatial-project-divider:focus-visible::after,
+      .is-resizing > .spatial-project-divider::after {
+        opacity: 1;
+      }
+
+      .spatial-project-divider:focus-visible {
+        outline: 1px solid #fff;
+        outline-offset: -6px;
+      }
+
+      body.is-resizing-frames,
+      body.is-resizing-frames * {
+        cursor: col-resize !important;
+        user-select: none;
+      }
+
+      .spatial-project-cover {
+        position: relative;
+        grid-column: span var(--project-columns, 2);
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        background: var(--page);
+        color: #fff;
+        font: inherit;
+        text-align: left;
+        cursor: default;
+      }
+
+      .spatial-project-cover > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .spatial-project-video {
+        background: #000;
+      }
+
+      .spatial-project-video > video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .spatial-project-cover[data-cursor-direction="previous"],
+      .all-preview-media[data-cursor-direction="previous"] {
+        cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'%3E%3Cpath d='M27 16H5M14 7l-9 9 9 9' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M27 16H5M14 7l-9 9 9 9' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, w-resize;
+      }
+
+      .spatial-project-cover[data-cursor-direction="next"],
+      .all-preview-media[data-cursor-direction="next"] {
+        cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'%3E%3Cpath d='M5 16h22M18 7l9 9-9 9' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 16h22M18 7l9 9-9 9' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, e-resize;
+      }
+
+      .spatial-project-cover[data-display-type="Night|Journeys|"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+      }
+
+      .spatial-project-cover[data-display-type="Night|Journeys|"] > img {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+      }
+
+      .spatial-project-cover > .spatial-project-outgoing {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+      }
+
+      .spatial-project-cover[data-display-type="Night|Journeys|"] > .spatial-project-outgoing {
+        top: 10%;
+        left: 10%;
+      }
+
+      .spatial-project-caption {
+        position: absolute;
+        top: calc(50% + 2rem);
+        left: 50%;
+        width: calc(100% - 2rem);
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: center;
+        text-wrap: balance;
+        mix-blend-mode: difference;
+        pointer-events: none;
+      }
+
+      .spatial-project-cover:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: -6px;
+      }
+
+      .spatial-project-counter {
+        position: absolute;
+        right: 1rem;
+        bottom: 1.25rem;
+        color: #fff;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        mix-blend-mode: difference;
+        pointer-events: none;
+      }
+
+      body.dark .spatial-project-cover[data-display-type="Home|Shirt|24/25"] > img[src*="Portfolio_QuickView_FCKADK_4"],
+      body.dark .spatial-project-cover[data-display-type="Home|Shirt|24/25"] > img[src*="Portfolio_QuickView_FCKADK_5"] {
+        filter: invert(1);
+      }
+    }
+
+    .all-project-preview {
+      display: none;
+    }
+
+    body.list-view {
+      height: 100svh;
+      overflow: hidden;
+    }
+
+    body.list-view .all-project-preview {
+      position: fixed;
+      inset: 0 50% 0 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--page);
+      color: var(--ink);
+      font-size: 0.75rem;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    .all-preview-heading {
+      margin: 0;
+      font: inherit;
+      font-weight: 500;
+    }
+
+    .all-preview-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) minmax(0, 0px);
+      gap: 0;
+      min-height: 0;
+      transition: grid-template-rows 550ms cubic-bezier(0.22, 1, 0.36, 1), gap 550ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .is-details-open .all-preview-content {
+      grid-template-rows: minmax(0, 1fr) minmax(0, 28svh);
+      gap: 1.5rem;
+    }
+
+    .all-preview-copy {
+      min-width: 0;
+      min-height: 0;
+      max-height: 28svh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(2rem);
+      transition: opacity 350ms ease, transform 550ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s 550ms;
+    }
+
+    .is-details-open .all-preview-copy {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition-delay: 0s;
+    }
+
+    body.list-view .all-preview-copy .list-dropdown-copy {
+      width: 100%;
+      margin: 0;
+    }
+
+    .all-preview-media {
+      position: relative;
+      grid-row: 1;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .all-preview-media[data-cursor-direction="up"] {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'%3E%3Cpath d='M16 27V5M7 14l9-9 9 9' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 27V5M7 14l9-9 9 9' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, n-resize;
+    }
+
+    .all-preview-media[data-cursor-direction="down"] {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 32 32'%3E%3Cpath d='M16 5v22M7 18l9 9 9-9' fill='none' stroke='%23000' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 5v22M7 18l9 9 9-9' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, s-resize;
+    }
+
+    .all-preview-media:focus-visible {
+      outline: 1px solid var(--ink);
+      outline-offset: -2px;
+    }
+
+    .all-preview-media > img,
+    .all-preview-media > video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .all-preview-media > .all-preview-outgoing {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .all-preview-arrow {
+      position: absolute;
+      top: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      transform: translateY(-50%);
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font: 300 2rem/1 Arial, sans-serif;
+      cursor: pointer;
+    }
+
+    .all-preview-previous {
+      left: 0.5rem;
+    }
+
+    .all-preview-next {
+      right: 0.5rem;
+    }
+
+    .all-preview-counter {
+      position: absolute;
+      right: 0.75rem;
+      bottom: 0.5rem;
+      color: #fff;
+      mix-blend-mode: difference;
+      pointer-events: none;
+    }
+
+    body.list-view .work-grid {
+      position: fixed;
+      inset: 0 0 0 50%;
+      width: 50%;
+      height: auto;
+      min-height: 0;
+      padding: 1rem 1.5rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-left: 1px solid var(--rule);
+    }
+
+    body.list-view .list-header,
+    body.list-view .list-row,
+    body.list-view .list-dropdown-row {
+      grid-template-columns: 4.75rem minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.25fr);
+      column-gap: 1rem;
+    }
+
+    body.list-view .list-row span {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    body.list-view .project {
+      flex-shrink: 0;
+    }
+
+    .all-read-more {
+      display: none;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      line-height: inherit;
+      text-align: left;
+      text-transform: none;
+      cursor: pointer;
+    }
+
+    body.list-view .project:hover > .list-row .all-format-label,
+    body.list-view .project:focus-within > .list-row .all-format-label {
+      display: none;
+    }
+
+    body.list-view .project:hover > .list-row .all-read-more,
+    body.list-view .project:focus-within > .list-row .all-read-more {
+      display: inline;
+    }
+
+    body.list-view .work-grid .project,
+    body.list-view .work-grid .list-dropdown-row {
+      border-top: 0;
+      border-bottom: 0;
+    }
+
+    body.list-view .list-header {
+      position: sticky;
+      top: -1rem;
+      z-index: 4;
+      flex-shrink: 0;
+      padding: 0.75rem 0;
+      background: var(--page);
+      opacity: 1;
+    }
+
+    body.list-view .project:not([data-display-type="Night|Journeys|"]) > .list-dropdown,
+    body.list-view .quick-view,
+    body.list-view .quick-view-loader {
+      display: none !important;
+    }
+
+    body.list-view .is-all-preview-active > .list-row {
+      opacity: 1;
+      text-decoration: underline;
+      text-underline-offset: 0.12em;
+    }
+
+    @media (max-width: 760px) {
+      body.list-view .all-project-preview,
+      body.list-view .work-grid {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+      }
+
+      .is-details-open .all-preview-content {
+        gap: 0.75rem;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .display-type,
-      .project-copy {
+      .project-copy,
+      .all-preview-content,
+      .all-preview-copy {
         transition: none;
       }
 

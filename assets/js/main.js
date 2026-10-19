@@ -63,6 +63,27 @@
       return project.dataset.quickView ? project.dataset.quickView.split('|') : [];
     }
 
+    if (oDaysProject) {
+      const images = quickViewImages(oDaysProject);
+      const openingPhotos = images.filter((source) => /ODAYS_Instagram_[6-9]\.jpg$/.test(source));
+      const openingPhoto = openingPhotos[Math.floor(Math.random() * openingPhotos.length)];
+      if (openingPhoto) {
+        const remainingImages = images.filter((source) => source !== openingPhoto);
+        for (let i = remainingImages.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [remainingImages[i], remainingImages[j]] = [remainingImages[j], remainingImages[i]];
+        }
+        const orderedImages = [openingPhoto, ...remainingImages];
+        oDaysProject.dataset.quickView = orderedImages.join('|');
+        const gallery = oDaysProject.querySelector('.list-dropdown-gallery');
+        const galleryImages = new Map([...gallery.querySelectorAll('img')].map((image) => [image.getAttribute('src'), image]));
+        orderedImages.forEach((source) => {
+          const image = galleryImages.get(source);
+          if (image) gallery.appendChild(image);
+        });
+      }
+    }
+
     function imageSourceKey(source) {
       return new URL(source, window.location.href).href;
     }
@@ -185,6 +206,27 @@
 
     const mobileSpatialCatalogue = document.querySelector('.mobile-spatial-catalogue');
     const mobileSlideshows = [];
+    const previewVideoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(({ target, isIntersecting }) => {
+        if (isIntersecting && !document.hidden) target.play().catch(() => {});
+        else target.pause();
+      });
+    }, { threshold: 0.1 });
+    function createPreviewVideo(source, name) {
+      const video = document.createElement('video');
+      video.src = source;
+      video.muted = true;
+      video.defaultMuted = true;
+      video.volume = 0;
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.controls = false;
+      video.preload = 'metadata';
+      video.setAttribute('aria-label', `${name} video preview`);
+      previewVideoObserver.observe(video);
+      return video;
+    }
     if (mobileSpatialCatalogue) {
       const mobileIntro = document.createElement('p');
       mobileIntro.className = 'mobile-spatial-intro-copy';
@@ -197,7 +239,8 @@
 
       curatedProjects.forEach((project) => {
         let slideshowImages = quickViewImages(project);
-        let source = slideshowImages[0];
+        const videoSource = project.dataset.previewVideo;
+        let source = videoSource || slideshowImages[0];
         if (project === nightJourneysProject) {
           const nightJourneyRows = [...project.querySelectorAll('.list-dropdown-row[data-quick-view]')];
           const firstNightJourney = nightJourneyRows[0];
@@ -224,24 +267,28 @@
         const item = document.createElement('figure');
         item.className = 'mobile-spatial-catalogue-item';
         item.dataset.displayType = project.dataset.displayType || '';
+        if (videoSource) item.dataset.previewVideo = videoSource;
         item.dataset.slideshowIndex = String(mobileSlideshows.length);
         item.dataset.slideshowImageIndex = String(Math.max(0, slideshowImages.indexOf(source)));
         if (project === nightJourneysProject) {
           project.dataset.slideshowIndex = String(mobileSlideshows.length);
         }
-        const itemImages = slideshowImages.length ? slideshowImages : [source];
+        const itemImages = videoSource ? [] : slideshowImages.length ? slideshowImages : [source];
         mobileSlideshows.push({
           name,
-          images: itemImages
+          images: itemImages,
+          video: videoSource
         });
 
         const imageStage = document.createElement('span');
         imageStage.className = 'mobile-spatial-catalogue-image';
-        const image = document.createElement('img');
-        image.src = source;
-        image.alt = '';
-        image.loading = 'lazy';
-        image.decoding = 'async';
+        const image = videoSource ? createPreviewVideo(videoSource, name) : document.createElement('img');
+        if (!videoSource) {
+          image.src = source;
+          image.alt = '';
+          image.loading = 'lazy';
+          image.decoding = 'async';
+        }
         imageStage.appendChild(image);
         let mobileProjectWidthFrame = null;
         const syncMobileProjectWidth = () => {
@@ -255,7 +302,7 @@
           if (mobileProjectWidthFrame !== null) return;
           mobileProjectWidthFrame = window.requestAnimationFrame(syncMobileProjectWidth);
         };
-        image.addEventListener('load', queueMobileProjectWidth);
+        image.addEventListener(videoSource ? 'loadedmetadata' : 'load', queueMobileProjectWidth);
         window.addEventListener('resize', queueMobileProjectWidth);
         if (window.visualViewport) {
           window.visualViewport.addEventListener('resize', queueMobileProjectWidth);
@@ -419,6 +466,226 @@
 
     }
 
+    // A single cover per project; rows follow a repeating four-column rhythm.
+    const spatialProjectGrid = document.createElement('section');
+    spatialProjectGrid.className = 'spatial-project-grid';
+    spatialProjectGrid.setAttribute('aria-label', 'Selected projects');
+    const spatialRowLayouts = [[2, 2], [3, 1], [4], [1, 3]];
+    const spatialCovers = [...mobileSpatialCatalogue?.querySelectorAll('.mobile-spatial-catalogue-item') || []];
+    const houndstoothCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'Houndstooth||');
+    const oDaysCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'O Days|Volunteer|Merchandise');
+    if (houndstoothCoverIndex >= 0 && oDaysCoverIndex >= 0) {
+      [spatialCovers[oDaysCoverIndex], spatialCovers[houndstoothCoverIndex]] =
+        [spatialCovers[houndstoothCoverIndex], spatialCovers[oDaysCoverIndex]];
+    }
+    const footballCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'God I Love|Football|');
+    const shirtCoverIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'O Days|Volunteer|Merchandise');
+    if (footballCoverIndex >= 0 && shirtCoverIndex >= 0) {
+      [spatialCovers[footballCoverIndex], spatialCovers[shirtCoverIndex]] =
+        [spatialCovers[shirtCoverIndex], spatialCovers[footballCoverIndex]];
+    }
+    let spatialCoverIndex = 0;
+    let spatialRowIndex = 0;
+    while (spatialCoverIndex < spatialCovers.length) {
+      const row = document.createElement('div');
+      row.className = 'spatial-project-row';
+      const isHoundstoothFootballRow = spatialCovers[spatialCoverIndex]?.dataset.displayType === 'Houndstooth||'
+        && spatialCovers[spatialCoverIndex + 1]?.dataset.displayType === 'God I Love|Football|';
+      const isHomeShirtVideoRow = spatialCovers[spatialCoverIndex]?.dataset.displayType === 'Home|Shirt|24/25'
+        && spatialCovers[spatialCoverIndex + 1]?.dataset.displayType === 'AllezAllez||';
+      const layout = isHomeShirtVideoRow ? [3, 1]
+        : isHoundstoothFootballRow ? [2, 2] : spatialRowLayouts[spatialRowIndex % spatialRowLayouts.length];
+      const remaining = spatialCovers.length - spatialCoverIndex;
+      const spans = remaining === 1 ? [4] : layout;
+      spans.forEach((span) => {
+        const sourceItem = spatialCovers[spatialCoverIndex++];
+        const cover = document.createElement('div');
+        cover.className = 'spatial-project-cover';
+        cover.style.setProperty('--project-columns', span);
+        cover.dataset.displayType = sourceItem.dataset.displayType;
+        const slideshowIndex = Number(sourceItem.dataset.slideshowIndex);
+        const frameSlideshow = mobileSlideshows[slideshowIndex];
+        let frameImageIndex = Number(sourceItem.dataset.slideshowImageIndex) || 0;
+        cover.setAttribute('role', 'group');
+        cover.setAttribute('aria-roledescription', frameSlideshow.video ? 'video preview' : 'slideshow');
+        cover.setAttribute('aria-label', frameSlideshow.name);
+        const image = frameSlideshow.video ? createPreviewVideo(frameSlideshow.video, frameSlideshow.name) : document.createElement('img');
+        if (frameSlideshow.video) {
+          cover.classList.add('spatial-project-video');
+        } else {
+          image.src = frameSlideshow.images[frameImageIndex];
+          image.alt = `${frameSlideshow.name}, image ${frameImageIndex + 1} of ${frameSlideshow.images.length}`;
+          image.loading = spatialCoverIndex <= 2 ? 'eager' : 'lazy';
+          image.decoding = 'async';
+          image.draggable = false;
+        }
+        const caption = document.createElement('span');
+        caption.className = 'spatial-project-caption';
+        caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
+        cover.append(image, caption);
+        if (frameSlideshow.images.length > 1) {
+          const isNightJourneys = cover.dataset.displayType === 'Night|Journeys|';
+          const isODays = cover.dataset.displayType === 'O Days|Volunteer|Merchandise';
+          const hasAutoplay = isNightJourneys || isODays;
+          const frameDirection = (event) => {
+            const bounds = cover.getBoundingClientRect();
+            return event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
+          };
+          cover.dataset.cursorDirection = 'next';
+          cover.addEventListener('pointermove', (event) => {
+            if (event.pointerType === 'touch') return;
+            cover.dataset.cursorDirection = frameDirection(event) < 0 ? 'previous' : 'next';
+          });
+          const counter = document.createElement('span');
+          counter.className = 'spatial-project-counter';
+          counter.setAttribute('aria-live', 'polite');
+          const updateCounter = () => {
+            counter.textContent = `${frameImageIndex + 1} / ${frameSlideshow.images.length}`;
+          };
+          let frameLoadId = 0;
+          let outgoingImage = null;
+          const moveFrame = async (direction) => {
+            const nextIndex = (frameImageIndex + direction + frameSlideshow.images.length) % frameSlideshow.images.length;
+            const loadId = ++frameLoadId;
+            if (hasAutoplay) {
+              const preload = new Image();
+              preload.src = frameSlideshow.images[nextIndex];
+              try {
+                await preload.decode();
+              } catch {
+                return;
+              }
+              if (loadId !== frameLoadId) return;
+              outgoingImage?.remove();
+              const outgoing = image.cloneNode();
+              outgoing.alt = '';
+              outgoing.setAttribute('aria-hidden', 'true');
+              outgoing.className = 'spatial-project-outgoing';
+              cover.insertBefore(outgoing, caption);
+              outgoingImage = outgoing;
+              outgoing.animate([{ opacity: 1 }, { opacity: 0 }], {
+                duration: reduceMotion.matches ? 0 : 550,
+                easing: 'ease-in-out',
+                fill: 'forwards'
+              }).finished.then(() => outgoing.remove());
+            }
+            frameImageIndex = nextIndex;
+            image.src = frameSlideshow.images[frameImageIndex];
+            image.alt = `${frameSlideshow.name}, image ${frameImageIndex + 1} of ${frameSlideshow.images.length}`;
+            updateCounter();
+          };
+          if (hasAutoplay) {
+            counter.setAttribute('aria-live', 'off');
+            let autoplayTimer = null;
+            let idleTimer = null;
+            const pauseAutoplay = () => {
+              window.clearInterval(autoplayTimer);
+              window.clearTimeout(idleTimer);
+              autoplayTimer = null;
+              // Cancel an automatic image that is still loading.
+              frameLoadId++;
+            };
+            const advanceAutoplay = () => {
+              if (document.hidden || document.body.classList.contains('list-view') || mobileViewport.matches) return;
+              const bounds = cover.getBoundingClientRect();
+              if (bounds.bottom > 0 && bounds.top < window.innerHeight) moveFrame(1);
+            };
+            const resumeAutoplay = () => {
+              window.clearInterval(autoplayTimer);
+              window.clearTimeout(idleTimer);
+              autoplayTimer = window.setInterval(advanceAutoplay, 2000);
+            };
+            const pauseUntilIdle = () => {
+              pauseAutoplay();
+              idleTimer = window.setTimeout(() => {
+                advanceAutoplay();
+                resumeAutoplay();
+              }, 2000);
+            };
+            cover.addEventListener('pointerenter', pauseUntilIdle);
+            cover.addEventListener('pointermove', pauseUntilIdle);
+            cover.addEventListener('click', pauseUntilIdle);
+            cover.addEventListener('keydown', (event) => {
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') pauseUntilIdle();
+            });
+            cover.addEventListener('pointerleave', resumeAutoplay);
+            resumeAutoplay();
+          }
+          cover.addEventListener('click', (event) => {
+            moveFrame(frameDirection(event));
+          });
+          cover.tabIndex = 0;
+          cover.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            moveFrame(event.key === 'ArrowLeft' ? -1 : 1);
+          });
+          updateCounter();
+          cover.appendChild(counter);
+        }
+        row.appendChild(cover);
+      });
+      if (spans.length === 2) {
+        row.classList.add('is-resizable');
+        const divider = document.createElement('div');
+        divider.className = 'spatial-project-divider';
+        divider.tabIndex = 0;
+        divider.setAttribute('role', 'separator');
+        divider.setAttribute('aria-orientation', 'vertical');
+        divider.setAttribute('aria-label', 'Resize project frames');
+        divider.setAttribute('aria-valuemin', '20');
+        divider.setAttribute('aria-valuemax', '80');
+        let split = spans[0] * 25;
+        const setSplit = (value) => {
+          split = Math.max(20, Math.min(80, value));
+          row.style.setProperty('--frame-split', `${split}%`);
+          divider.setAttribute('aria-valuenow', String(Math.round(split)));
+          divider.setAttribute('aria-valuetext', `${Math.round(split)}% left, ${Math.round(100 - split)}% right`);
+        };
+        setSplit(split);
+        let dragPointer = null;
+        const resizeFromPointer = (event) => {
+          const bounds = row.getBoundingClientRect();
+          if (bounds.width) setSplit((event.clientX - bounds.left) / bounds.width * 100);
+        };
+        const stopResizing = () => {
+          dragPointer = null;
+          row.classList.remove('is-resizing');
+          document.body.classList.remove('is-resizing-frames');
+        };
+        divider.addEventListener('pointerdown', (event) => {
+          if (!event.isPrimary || event.button !== 0) return;
+          event.preventDefault();
+          dragPointer = event.pointerId;
+          divider.setPointerCapture(dragPointer);
+          divider.focus({ preventScroll: true });
+          row.classList.add('is-resizing');
+          document.body.classList.add('is-resizing-frames');
+          resizeFromPointer(event);
+        });
+        divider.addEventListener('pointermove', (event) => {
+          if (event.pointerId === dragPointer) resizeFromPointer(event);
+        });
+        divider.addEventListener('pointerup', (event) => {
+          if (event.pointerId !== dragPointer) return;
+          resizeFromPointer(event);
+          divider.releasePointerCapture(event.pointerId);
+          stopResizing();
+        });
+        divider.addEventListener('pointercancel', stopResizing);
+        divider.addEventListener('lostpointercapture', stopResizing);
+        divider.addEventListener('keydown', (event) => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault();
+          setSplit(event.key === 'Home' ? 20 : event.key === 'End' ? 80 : split + (event.key === 'ArrowLeft' ? -2 : 2));
+        });
+        row.appendChild(divider);
+      }
+      spatialProjectGrid.appendChild(row);
+      spatialRowIndex++;
+    }
+    workGrid.appendChild(spatialProjectGrid);
+
     projects.forEach((project) => {
       if (project.hasAttribute('data-list-dropdown')) return;
       const listRow = project.querySelector(':scope > .list-row');
@@ -434,7 +701,7 @@
       dropdown.className = 'list-dropdown list-dropdown-media';
 
       const row = document.createElement('span');
-      row.className = images.length
+      row.className = images.length || project.dataset.previewVideo
         ? 'list-dropdown-row list-dropdown-media-row list-dropdown-generated-row'
         : 'list-dropdown-row list-dropdown-media-row list-dropdown-text-only-row list-dropdown-generated-row';
       if (project.dataset.displayType === 'God I Love|Football|') {
@@ -451,16 +718,34 @@
       const description = document.createElement('span');
       description.className = 'list-dropdown-copy-description';
       description.textContent = project.dataset.description || `${name} is a ${format || 'project'} for ${client || 'Self-Initiated'}.`;
+      if (project.dataset.projectUrl && format) {
+        const text = description.textContent;
+        const linkStart = text.toLowerCase().indexOf(format.toLowerCase());
+        if (linkStart >= 0) {
+          const link = document.createElement('a');
+          link.href = project.dataset.projectUrl;
+          link.textContent = text.slice(linkStart, linkStart + format.length);
+          description.replaceChildren(text.slice(0, linkStart), link, text.slice(linkStart + format.length));
+        }
+      }
 
       const detailsTitle = document.createElement('strong');
       detailsTitle.className = 'list-dropdown-copy-title list-dropdown-details-title';
       detailsTitle.textContent = 'Details';
 
+      const designers = document.createDocumentFragment();
+      designers.append('Michael Tsalkos');
+      if (project.dataset.coDesigner) {
+        const collaborator = document.createElement('a');
+        collaborator.textContent = project.dataset.coDesigner;
+        collaborator.href = project.dataset.coDesignerUrl;
+        designers.append(document.createElement('br'), collaborator);
+      }
       const details = [
         ['Year', year],
         ['Client', client],
         ['Format', format],
-        ['Designer', 'Michael Tsalkos']
+        [project.dataset.coDesigner ? 'Designer(s)' : 'Designer', designers]
       ];
 
       copy.append(descriptionTitle, description, detailsTitle);
@@ -486,6 +771,13 @@
       }
 
       row.appendChild(copy);
+
+      if (project.dataset.previewVideo) {
+        const gallery = document.createElement('span');
+        gallery.className = 'list-dropdown-gallery list-dropdown-gallery-video';
+        gallery.appendChild(createPreviewVideo(project.dataset.previewVideo, name));
+        row.appendChild(gallery);
+      }
 
       if (images.length) {
         const gallery = document.createElement('span');
@@ -515,6 +807,236 @@
       dropdown.appendChild(row);
       project.appendChild(dropdown);
     });
+
+    const allPreview = document.createElement('section');
+    allPreview.className = 'all-project-preview';
+    allPreview.setAttribute('aria-label', 'Project preview');
+    allPreview.innerHTML = '<h2 class="all-preview-heading"></h2><div class="all-preview-content"><div class="all-preview-copy"></div><div class="all-preview-media"></div></div>';
+    document.body.appendChild(allPreview);
+    const allPreviewHeading = allPreview.querySelector('.all-preview-heading');
+    const allPreviewCopy = allPreview.querySelector('.all-preview-copy');
+    const allPreviewMedia = allPreview.querySelector('.all-preview-media');
+    allPreviewCopy.id = 'all-project-details';
+    let activeAllSource = null;
+    let allPreviewImages = [];
+    let allPreviewIndex = 0;
+    let allPreviewLoadId = 0;
+    let allPreviewPointer = null;
+    let suppressAllHover = false;
+    allPreviewMedia.setAttribute('role', 'group');
+    allPreviewMedia.setAttribute('aria-label', 'Project preview. Left and Right browse images; Up and Down browse projects.');
+
+    function setAllDetailsOpen(open) {
+      allPreview.classList.toggle('is-details-open', open);
+      allPreviewCopy.inert = !open;
+      allPreviewCopy.setAttribute('aria-hidden', String(!open));
+      const activeProject = activeAllSource?.closest('.project');
+      projects.forEach((project) => {
+        project.querySelector('.all-read-more')?.setAttribute('aria-expanded', String(open && project === activeProject));
+      });
+    }
+
+    projects.forEach((project) => {
+      const formatCell = project.querySelector(':scope > .list-row > span:nth-child(4)');
+      if (!formatCell) return;
+      const formatLabel = document.createElement('span');
+      formatLabel.className = 'all-format-label';
+      formatLabel.append(...formatCell.childNodes);
+      const readMore = document.createElement('button');
+      readMore.type = 'button';
+      readMore.className = 'all-read-more';
+      readMore.textContent = 'read more about this project';
+      readMore.setAttribute('aria-controls', allPreviewCopy.id);
+      readMore.setAttribute('aria-expanded', 'false');
+      readMore.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        showAllPreview(project);
+        setAllDetailsOpen(!allPreview.classList.contains('is-details-open'));
+      });
+      formatCell.append(formatLabel, readMore);
+    });
+    setAllDetailsOpen(false);
+
+    function moveAllPreview(direction) {
+      if (allPreviewMedia.dataset.canBrowse !== 'true') return;
+      allPreviewIndex = (allPreviewIndex + direction + allPreviewImages.length) % allPreviewImages.length;
+      renderAllPreviewMedia(direction, 'horizontal');
+    }
+
+    function allPreviewDirection(event) {
+      const bounds = allPreviewMedia.getBoundingClientRect();
+      const edgeSize = Math.min(24, bounds.height * 0.08);
+      if (event.clientY < bounds.top + edgeSize) return 'up';
+      if (event.clientY > bounds.bottom - edgeSize) return 'down';
+      if (allPreviewMedia.dataset.canBrowse !== 'true') return null;
+      return event.clientX < bounds.left + bounds.width / 2 ? 'previous' : 'next';
+    }
+
+    function updateAllPreviewCursor(event) {
+      const direction = allPreviewDirection(event);
+      if (direction) allPreviewMedia.dataset.cursorDirection = direction;
+      else delete allPreviewMedia.dataset.cursorDirection;
+    }
+
+    function moveAllProject(direction) {
+      const ordered = [...workGrid.querySelectorAll(':scope > .project')];
+      const index = ordered.indexOf(activeAllSource?.closest('.project'));
+      const target = ordered[Math.max(0, Math.min(ordered.length - 1, index + direction))];
+      if (!target || target === activeAllSource?.closest('.project')) return;
+      suppressAllHover = true;
+      showAllPreview(target);
+      target.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+    }
+
+    allPreviewMedia.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch') return;
+      allPreviewPointer = { clientX: event.clientX, clientY: event.clientY };
+      updateAllPreviewCursor(event);
+    });
+    allPreviewMedia.addEventListener('pointerleave', () => {
+      allPreviewPointer = null;
+      delete allPreviewMedia.dataset.cursorDirection;
+    });
+    allPreviewMedia.addEventListener('click', (event) => {
+      const direction = allPreviewDirection(event);
+      if (direction === 'up' || direction === 'down') moveAllProject(direction === 'up' ? -1 : 1);
+      else if (direction) moveAllPreview(direction === 'previous' ? -1 : 1);
+    });
+    allPreviewMedia.addEventListener('keydown', (event) => {
+      if (allPreviewMedia.dataset.canBrowse !== 'true' || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      moveAllPreview(event.key === 'ArrowLeft' ? -1 : 1);
+    });
+    window.addEventListener('keydown', (event) => {
+      if (!document.body.classList.contains('list-view') || document.body.classList.contains('spatial-slideshow-open') || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (!['ArrowUp', 'ArrowDown'].includes(event.key) || event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      event.preventDefault();
+      moveAllProject(event.key === 'ArrowUp' ? -1 : 1);
+    });
+
+    async function renderAllPreviewMedia(direction = 1, motion = 'vertical') {
+      const loadId = ++allPreviewLoadId;
+      const videoSource = activeAllSource?.dataset.previewVideo;
+      const source = videoSource || allPreviewImages[allPreviewIndex];
+      const name = allPreviewHeading.textContent;
+      const index = allPreviewIndex;
+      const count = allPreviewImages.length;
+      const canBrowse = !videoSource && source && !/\.(mp4|mov|webm)(?:\?|$)/i.test(source) && allPreviewImages.length > 1;
+      allPreviewMedia.tabIndex = 0;
+      allPreviewMedia.dataset.canBrowse = String(Boolean(canBrowse));
+      if (allPreviewPointer) updateAllPreviewCursor(allPreviewPointer);
+      else if (canBrowse) allPreviewMedia.dataset.cursorDirection = 'next';
+      else delete allPreviewMedia.dataset.cursorDirection;
+      if (!source) {
+        allPreviewMedia.querySelectorAll('video').forEach((video) => {
+          video.pause();
+          previewVideoObserver.unobserve(video);
+        });
+        allPreviewMedia.replaceChildren();
+        return;
+      }
+      const isVideo = videoSource || /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
+      const media = isVideo ? createPreviewVideo(source, name) : document.createElement('img');
+      if (isVideo) {
+        media.preload = 'auto';
+        await new Promise((resolve) => {
+          media.addEventListener('loadeddata', resolve, { once: true });
+          media.addEventListener('error', resolve, { once: true });
+          media.load();
+        });
+      } else {
+        media.src = source;
+        media.alt = `${name}, image ${index + 1} of ${count}`;
+        media.decoding = 'async';
+        media.draggable = false;
+        await media.decode().catch(() => {});
+      }
+      if (loadId !== allPreviewLoadId || !document.body.classList.contains('list-view')) {
+        if (isVideo) {
+          media.pause();
+          previewVideoObserver.unobserve(media);
+        }
+        return;
+      }
+      const outgoing = !reduceMotion.matches
+        ? allPreviewMedia.querySelector('img:not(.all-preview-outgoing), video:not(.all-preview-outgoing)')
+        : null;
+      outgoing?.getAnimations().forEach((animation) => animation.cancel());
+      allPreviewMedia.querySelectorAll('video').forEach((video) => {
+        video.pause();
+        previewVideoObserver.unobserve(video);
+      });
+      allPreviewMedia.replaceChildren(media);
+      if (!reduceMotion.matches) {
+        const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+        const axis = motion === 'horizontal' ? 'X' : 'Y';
+        media.animate([
+          { transform: `translate${axis}(${direction > 0 ? '100%' : '-100%'})`, opacity: 1 },
+          { transform: `translate${axis}(0)`, opacity: 1 }
+        ], timing);
+        if (outgoing) {
+          outgoing.classList.add('all-preview-outgoing');
+          outgoing.setAttribute('aria-hidden', 'true');
+          allPreviewMedia.appendChild(outgoing);
+          outgoing.animate([
+            { transform: `translate${axis}(0)` },
+            { transform: `translate${axis}(${direction > 0 ? '-100%' : '100%'})` }
+          ], { ...timing, fill: 'forwards' }).finished.then(() => outgoing.remove(), () => outgoing.remove());
+        }
+      }
+      if (!isVideo && count > 1) {
+        const counter = document.createElement('span');
+        counter.className = 'all-preview-counter';
+        counter.textContent = `${index + 1} / ${count}`;
+        allPreviewMedia.appendChild(counter);
+      }
+    }
+
+    function showAllPreview(source, force = false) {
+      if (!document.body.classList.contains('list-view') || (!force && activeAllSource === source)) return;
+      const project = source.closest('.project');
+      if (!project) return;
+      const direction = activeAllSource && (activeAllSource.compareDocumentPosition(source) & Node.DOCUMENT_POSITION_PRECEDING) ? -1 : 1;
+      if (force || activeAllSource?.closest('.project') !== project) setAllDetailsOpen(false);
+      activeAllSource = source;
+      allPreviewIndex = 0;
+      allPreviewImages = quickViewImages(source);
+      if (!allPreviewImages.length && !source.dataset.previewVideo) {
+        allPreviewImages = [...project.querySelectorAll('.list-dropdown-row[data-quick-view]')].flatMap(quickViewImages);
+      }
+      if (!allPreviewImages.length && !source.dataset.previewVideo) {
+        allPreviewImages = [...project.querySelectorAll('.list-dropdown-gallery img, .list-dropdown-gallery-ftf img')]
+          .map((image) => image.getAttribute('src')).filter(Boolean);
+      }
+      const cells = project.querySelectorAll(':scope > .list-row > span');
+      allPreviewHeading.textContent = source === project
+        ? cells[1]?.textContent.trim() || 'Project'
+        : source.children[1]?.textContent.trim() || cells[1]?.textContent.trim() || 'Project';
+      allPreviewCopy.replaceChildren();
+      const copy = project.querySelector('.list-dropdown-copy');
+      if (copy) allPreviewCopy.appendChild(copy.cloneNode(true));
+      else {
+        const summary = document.createElement('p');
+        summary.textContent = [cells[0]?.textContent, cells[2]?.textContent, cells[3]?.querySelector('.all-format-label')?.textContent || cells[3]?.textContent].filter(Boolean).join(' · ');
+        allPreviewCopy.appendChild(summary);
+      }
+      projects.forEach((item) => item.classList.toggle('is-all-preview-active', item === project));
+      renderAllPreviewMedia(direction);
+    }
+
+    const previewListTarget = (event) => {
+      if (event.type === 'pointerover' && suppressAllHover) return;
+      const source = event.target.closest('.list-dropdown-row[data-quick-view], .project');
+      if (source) showAllPreview(source);
+    };
+    workGrid.addEventListener('pointerover', previewListTarget);
+    workGrid.addEventListener('pointermove', (event) => {
+      if (!suppressAllHover) return;
+      suppressAllHover = false;
+      previewListTarget(event);
+    });
+    workGrid.addEventListener('focusin', previewListTarget);
 
     const slideshow = document.createElement('div');
     slideshow.className = 'spatial-slideshow';
@@ -723,6 +1245,7 @@
     });
 
     function positionQuickView(event) {
+      if (document.body.classList.contains('list-view')) return;
       const gap = 16;
       const aboveTop = event.clientY - quickView.offsetHeight - gap;
       quickView.style.left = `${event.clientX + gap}px`;
@@ -734,6 +1257,11 @@
     }
 
     function showQuickView(project, event) {
+      if (document.body.classList.contains('list-view')) {
+        if (suppressAllHover) return;
+        showAllPreview(project);
+        return;
+      }
       const images = quickViewImages(project);
       if (
         !images.length ||
@@ -778,7 +1306,7 @@
       const scrollCueOpacity = Math.max(0, Math.min(1, 1 - mobileScrollTop / 120));
       document.documentElement.style.setProperty('--scroll-cue-opacity', scrollCueOpacity.toFixed(3));
 
-      if (document.body.classList.contains('list-view') || !displayTypeProjects.length) {
+      if (document.body.classList.contains('list-view') || !mobileViewport.matches || !displayTypeProjects.length) {
         document.documentElement.style.setProperty('--selected-opacity', '1');
         displayTypeLayers.forEach(({ layer }) => {
           layer.style.setProperty('--project-opacity', '0');
@@ -963,30 +1491,20 @@
       row.addEventListener('pointerleave', hideQuickView);
       row.addEventListener('click', (event) => {
         if (!document.body.classList.contains('list-view')) return;
-        let images = quickViewImages(row);
-        if (!images.length) return;
         event.preventDefault();
         event.stopPropagation();
-        hideQuickView();
-        let imageIndex = 0;
-        const title = row.querySelector('span:nth-child(2)')?.textContent.trim() || 'Night Journeys';
-        const parentProject = row.closest('.project');
-        if (parentProject?.dataset.displayType === 'Night|Journeys|') {
-          const rows = [...parentProject.querySelectorAll('.list-dropdown-row[data-quick-view]')];
-          images = rows.flatMap((item) => quickViewImages(item));
-          imageIndex = rows
-            .slice(0, rows.indexOf(row))
-            .reduce((total, item) => total + quickViewImages(item).length, 0);
-        }
-        openSlideshowData({ name: title, images }, imageIndex);
+        showAllPreview(row);
       });
     });
 
     document.querySelectorAll('[data-list-dropdown]').forEach((project) => {
       project.addEventListener('click', (event) => {
         if (!document.body.classList.contains('list-view')) return;
+        if (event.target.closest('a') !== project) return;
         if (event.target.closest('.list-dropdown')) return;
         event.preventDefault();
+        showAllPreview(project);
+        if (project !== nightJourneysProject) return;
         const isOpen = project.classList.toggle('is-dropdown-open');
         project.setAttribute('aria-expanded', String(isOpen));
         if (isOpen) hideQuickView();
@@ -1015,6 +1533,12 @@
       const orderedProjects = [...projects].sort((a, b) => sortValue(b) - sortValue(a));
 
       orderedProjects.forEach((project) => workGrid.appendChild(project));
+      if (isList) {
+        hideQuickView();
+        showAllPreview(activeAllSource || orderedProjects[0], true);
+      } else {
+        allPreviewMedia.querySelectorAll('video').forEach((video) => video.pause());
+      }
       viewButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.view === view));
       });
@@ -1075,7 +1599,7 @@
       const scroller = isMobileSpatial ? workGrid : window;
       const candidates = isMobileSpatial
         ? [...mobileSpatialCatalogue?.querySelectorAll('.mobile-spatial-catalogue-item') || []]
-        : [...workGrid.querySelectorAll('.project[data-curated]')];
+        : [...spatialProjectGrid.querySelectorAll('.spatial-project-row')];
       if (!candidates.length) return;
 
       const viewportHeight = isMobileSpatial
@@ -1107,8 +1631,10 @@
       savedView = localStorage.getItem('graphic-project-view') || 'spatial';
     } catch (error) {}
     const requestedView = new URLSearchParams(window.location.search).get('view');
-    const initialView = mobileViewport.matches || requestedView === 'spatial' ? 'spatial' : savedView === 'list' ? 'list' : 'spatial';
-    if (initialView === 'spatial' && nightJourneysProject) {
+    const initialView = mobileViewport.matches ? 'spatial'
+      : ['spatial', 'list'].includes(requestedView) ? requestedView
+      : savedView === 'list' ? 'list' : 'spatial';
+    if (initialView === 'spatial' && mobileViewport.matches && nightJourneysProject) {
       spatialScrollPosition = nightJourneysProject.offsetTop;
     }
     setView(initialView);

@@ -33,7 +33,7 @@ main {
 
 .about-description {
   display: contents;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.25;
 }
 
@@ -51,7 +51,7 @@ main {
   flex-direction: column;
   margin-top: 0;
   min-width: 0;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.25;
   text-align: center;
 }
@@ -121,7 +121,7 @@ main {
 .cv-overview {
   display: contents;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.18;
   letter-spacing: 0;
 }
@@ -216,7 +216,7 @@ main {
   grid-column: 1;
   grid-row: 1;
   align-self: start;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.18;
 }
 
@@ -236,7 +236,7 @@ main {
   grid-row: 2;
   align-self: end;
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.18;
 }
 
@@ -348,7 +348,7 @@ body.dark .experience-toggle button[aria-selected="false"] {
   .cv-overview {
     margin-top: 3rem;
     display: block;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     line-height: 1.18;
   }
 
@@ -400,7 +400,7 @@ body.dark .experience-toggle button[aria-selected="false"] {
   .experience-work {
     grid-template-columns: 1fr;
     row-gap: 1.5rem;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
   }
 
 }

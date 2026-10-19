@@ -5,34 +5,27 @@
   ).forEach((element) => element.remove());
 
   const path = decodeURIComponent(window.location.pathname || '');
-  const marker = '/Web Portfolio';
-  const idx = path.indexOf(marker);
-  const githubProjectBase = window.location.hostname.endsWith('.github.io')
-    ? `/${path.split('/').filter(Boolean)[0] || ''}`
-    : '';
-  const base = idx >= 0 ? path.slice(0, idx + marker.length) : githubProjectBase;
+  const base = new URL('../', document.currentScript.src).href.replace(/\/$/, '');
   const linkGraphic = `${base}/index.html?view=spatial`;
   const linkFonts = `${base}/Portfolio_Fonts_Tab/Portfolio_Fonts_Landingpage/fonts.html`;
   const linkAbout = `${base}/Portfolio_About/about.html`;
   const isFonts = path.includes('/Portfolio_Fonts_Tab/');
-  const primaryLink = isFonts ? linkGraphic : linkFonts;
-  const primaryLabel = isFonts ? 'Graphic Design' : 'Fonts';
+  const isAbout = path.includes('/Portfolio_About/');
 
   const TOPBAR_HTML = `
     <div class="site-topbar" data-shared-topbar>
-    <nav class="topbar-nav">
-      <a href="${linkGraphic}">Graphic Design</a>
-      <a href="${linkFonts}">Fonts</a>
+    <nav class="topbar-links" aria-label="Main navigation">
+      <a href="${linkGraphic}" ${!isFonts && !isAbout ? 'aria-current="page"' : ''}>Graphic Design</a>
+      <a href="${linkFonts}" ${isFonts ? 'aria-current="page"' : ''}>Fonts</a>
     </nav>
-    <header class="topbar-header"><a href="${linkGraphic}">MICHAEL TSALKOS™</a></header>
-    <nav class="topbar-mobile-nav">
-      <a href="${primaryLink}">${primaryLabel}</a>
-      <a href="${linkAbout}">About</a>
-    </nav>
-    <a class="topbar-about" href="${linkAbout}">About</a>
-    <button class="topbar-switch" id="sharedThemeSwitch" role="switch" aria-checked="false" aria-label="Toggle dark mode">
+    <a class="topbar-name" href="${linkGraphic}" aria-label="Michael Tsalkos — selected work">MICHAEL TSALKOS™</a>
+    <div class="topbar-tools">
+      <div class="topbar-view-slot"></div>
+      <a href="${linkAbout}" ${isAbout ? 'aria-current="page"' : ''}>About</a>
+    <button class="topbar-theme" id="sharedThemeSwitch" role="switch" aria-checked="false" aria-label="Toggle dark mode">
       <div class="topbar-knob" id="sharedKnob"></div>
     </button>
+    </div>
     </div>
   `;
 
@@ -41,6 +34,29 @@
   const frag = document.createDocumentFragment();
   while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
   document.body.appendChild(frag);
+
+  const sharedBar = document.querySelector('.site-topbar');
+  const syncBarHeight = () => document.documentElement.style.setProperty('--navigation-half-height', `${sharedBar.getBoundingClientRect().height / 2}px`);
+  new ResizeObserver(syncBarHeight).observe(sharedBar);
+  syncBarHeight();
+
+  const mountViewToggle = () => {
+    const viewToggle = document.querySelector('.view-toggle');
+    const slot = document.querySelector('.topbar-view-slot');
+    if (viewToggle) slot.appendChild(viewToggle);
+    else if (isAbout) {
+      const links = document.createElement('nav');
+      links.className = 'topbar-view-links';
+      links.setAttribute('aria-label', 'Project view');
+      links.innerHTML = `<a href="${linkGraphic}">Selected</a><a href="${base}/index.html?view=list">All</a>`;
+      slot.appendChild(links);
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountViewToggle, { once: true });
+  } else {
+    mountViewToggle();
+  }
 
   const switchBtn = document.getElementById('sharedThemeSwitch');
   const knob = document.getElementById('sharedKnob');
@@ -73,10 +89,8 @@
 
   if (!switchBtn || !knob) return;
 
-  const dist = 40 - 2 - 16 - 2;
   const applyState = (dark) => {
     document.body.classList.toggle('dark', dark);
-    knob.style.transform = `translateX(${dark ? dist : 0}px)`;
     switchBtn.setAttribute('aria-checked', String(dark));
     try { localStorage.setItem('theme-dark', dark ? '1' : '0'); } catch (e) {}
   };
@@ -87,19 +101,10 @@
     if (v === '1') storedDark = true;
     if (v === '0') storedDark = false;
   } catch (e) {}
-  applyState(storedDark !== null ? storedDark : document.body.classList.contains('dark'));
+  applyState(storedDark !== null ? storedDark : true);
 
   switchBtn.addEventListener('click', () => {
     const dark = !document.body.classList.contains('dark');
     applyState(dark);
-    const x = dark ? dist : 0;
-    knob.animate(
-      [
-        { transform: `translateX(${x}px)` },
-        { transform: `translateX(${dark ? x + 2 : x - 2}px)` },
-        { transform: `translateX(${x}px)` },
-      ],
-      { duration: 350, easing: 'cubic-bezier(0.25, 1.5, 0.5, 1)' }
-    );
   });
 })();
