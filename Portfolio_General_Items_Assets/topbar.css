@@ -10,6 +10,7 @@ html {
   top: 50%;
   left: 0;
   z-index: 10020;
+  view-transition-name: site-navigation;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
@@ -180,4 +181,109 @@ body.list-view .site-topbar:focus-within {
     flex-basis: 1.75rem;
     margin-right: -0.35rem;
   }
+}
+
+/* Match the work page's scrollbar space so About does not shift sideways. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Keep navigation still while the page content pushes between views. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(root),
+::view-transition-group(site-navigation) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation-duration: 650ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+html[data-view-direction="from-fonts"]::view-transition-old(root),
+html[data-view-direction="to-all"]::view-transition-old(root) {
+  animation-name: view-exit-left;
+}
+
+html[data-view-direction="from-fonts"]::view-transition-new(root),
+html[data-view-direction="to-all"]::view-transition-new(root) {
+  animation-name: view-enter-right;
+}
+
+html[data-view-direction="to-fonts"]::view-transition-old(root),
+html[data-view-direction="to-selected"]::view-transition-old(root) {
+  animation-name: view-exit-right;
+}
+
+html[data-view-direction="to-fonts"]::view-transition-new(root),
+html[data-view-direction="to-selected"]::view-transition-new(root) {
+  animation-name: view-enter-left;
+}
+
+::view-transition-group(site-navigation) {
+  z-index: 2;
+}
+
+::view-transition-old(site-navigation) {
+  display: none;
+}
+
+::view-transition-new(site-navigation) {
+  animation: none;
+}
+
+@keyframes view-exit-left {
+  to { transform: translateX(-100%); }
+}
+
+@keyframes view-enter-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes view-exit-right {
+  to { transform: translateX(100%); }
+}
+
+@keyframes view-enter-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+html[data-view-direction="to-about"]::view-transition-old(root) {
+  animation-name: view-exit-up;
+}
+html[data-view-direction="to-about"]::view-transition-new(root) {
+  animation-name: view-enter-below;
+}
+html[data-view-direction="from-about"]::view-transition-old(root) {
+  animation-name: view-exit-down;
+}
+html[data-view-direction="from-about"]::view-transition-new(root) {
+  animation-name: view-enter-above;
+}
+@keyframes view-exit-up {
+  to { transform: translateY(-100%); }
+}
+@keyframes view-enter-below {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes view-exit-down {
+  to { transform: translateY(100%); }
+}
+@keyframes view-enter-above {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; }
 }

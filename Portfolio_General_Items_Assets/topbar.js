@@ -1,5 +1,15 @@
 // Inject shared top bar and handle desktop dark mode toggle
 (function () {
+  // Set the initial theme before measuring the bar. A layout measurement with
+  // the light theme first would start a background fade on every new page.
+  let storedDark = null;
+  try {
+    const value = localStorage.getItem('theme-dark');
+    if (value === '1') storedDark = true;
+    if (value === '0') storedDark = false;
+  } catch (error) {}
+  document.body.classList.toggle('dark', storedDark !== null ? storedDark : true);
+
   document.querySelectorAll(
     '.site-topbar, .topbar-nav, .topbar-header, .topbar-mobile-nav, .topbar-about, .topbar-switch'
   ).forEach((element) => element.remove());
@@ -11,6 +21,46 @@
   const linkAbout = `${base}/Portfolio_About/about.html`;
   const isFonts = path.includes('/Portfolio_Fonts_Tab/');
   const isAbout = path.includes('/Portfolio_About/');
+
+  // Fonts lives to the left; About lives below. Animate the navigation
+  // snapshots without loading either page's media in advance.
+  const pageTransitionDirection = (from, to) => {
+    if (!from || !to) return null;
+    const fromURL = new URL(from);
+    const toURL = new URL(to);
+    if (fromURL.origin !== toURL.origin) return null;
+    const aboutPath = new URL(linkAbout).pathname;
+    const fontsPath = new URL(linkFonts).pathname;
+    const workPath = new URL(linkGraphic).pathname;
+    const isWork = (url) => url.pathname === workPath || url.pathname === new URL(`${base}/`).pathname;
+    const isTopLevel = (url) => isWork(url) || url.pathname === fontsPath;
+    if (isTopLevel(fromURL) && toURL.pathname === aboutPath) return 'to-about';
+    if (fromURL.pathname === aboutPath && isTopLevel(toURL)) return 'from-about';
+    if (isWork(fromURL) && toURL.pathname === fontsPath) return 'to-fonts';
+    if (fromURL.pathname === fontsPath && isWork(toURL)) return 'from-fonts';
+    return null;
+  };
+  const preparePageTransition = (transition, from, to) => {
+    if (!transition) return;
+    const direction = pageTransitionDirection(from, to);
+    if (!direction || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      transition.skipTransition();
+      return;
+    }
+    document.documentElement.dataset.viewDirection = direction;
+    transition.ready.catch(() => {});
+    transition.finished.catch(() => {}).finally(() => {
+      if (document.documentElement.dataset.viewDirection === direction) {
+        delete document.documentElement.dataset.viewDirection;
+      }
+    });
+  };
+  window.addEventListener('pageswap', (event) => {
+    preparePageTransition(event.viewTransition, location.href, event.activation?.entry?.url);
+  });
+  window.addEventListener('pagereveal', (event) => {
+    preparePageTransition(event.viewTransition, window.navigation?.activation?.from?.url, location.href);
+  });
 
   const TOPBAR_HTML = `
     <div class="site-topbar" data-shared-topbar>
@@ -95,12 +145,6 @@
     try { localStorage.setItem('theme-dark', dark ? '1' : '0'); } catch (e) {}
   };
 
-  let storedDark = null;
-  try {
-    const v = localStorage.getItem('theme-dark');
-    if (v === '1') storedDark = true;
-    if (v === '0') storedDark = false;
-  } catch (e) {}
   applyState(storedDark !== null ? storedDark : true);
 
   switchBtn.addEventListener('click', () => {

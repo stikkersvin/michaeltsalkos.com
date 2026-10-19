@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Fonts – Michael Tsalkos</title>
+  <link rel="expect" blocking="render" href="#page-ready" />
   <link rel="icon" type="image/png" href="../../favicon.png" />
   <style>
     @font-face {
@@ -393,6 +394,7 @@
   </style>
 </head>
 <body>
+  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
   <main class="fonts-page">
     <section class="font-row">
       <div class="font-left">
@@ -519,7 +521,7 @@
     </section>
   </main>
 
-  <script>
+  <script id="page-ready">
     // Editable specimen names. Dedicated "View font" links handle navigation.
     (function(){
       const specimens = Array.from(document.querySelectorAll('.font-name[contenteditable="true"]'));
@@ -746,6 +748,5 @@
 
   </script>
 
-  <script src="../../Portfolio_General_Items_Assets/topbar.js"></script>
 </body>
 </html>

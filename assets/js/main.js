@@ -554,32 +554,43 @@
           const moveFrame = async (direction) => {
             const nextIndex = (frameImageIndex + direction + frameSlideshow.images.length) % frameSlideshow.images.length;
             const loadId = ++frameLoadId;
-            if (hasAutoplay) {
-              const preload = new Image();
-              preload.src = frameSlideshow.images[nextIndex];
-              try {
-                await preload.decode();
-              } catch {
-                return;
-              }
-              if (loadId !== frameLoadId) return;
-              outgoingImage?.remove();
-              const outgoing = image.cloneNode();
+            const preload = new Image();
+            preload.decoding = 'async';
+            preload.src = frameSlideshow.images[nextIndex];
+            try {
+              await preload.decode();
+            } catch {
+              return;
+            }
+            if (loadId !== frameLoadId || document.body.classList.contains('list-view') || mobileViewport.matches) return;
+            outgoingImage?.getAnimations().forEach((animation) => animation.cancel());
+            outgoingImage?.remove();
+            image.getAnimations().forEach((animation) => animation.cancel());
+            let outgoing = null;
+            if (!reduceMotion.matches) {
+              outgoing = image.cloneNode();
               outgoing.alt = '';
               outgoing.setAttribute('aria-hidden', 'true');
               outgoing.className = 'spatial-project-outgoing';
               cover.insertBefore(outgoing, caption);
               outgoingImage = outgoing;
-              outgoing.animate([{ opacity: 1 }, { opacity: 0 }], {
-                duration: reduceMotion.matches ? 0 : 550,
-                easing: 'ease-in-out',
-                fill: 'forwards'
-              }).finished.then(() => outgoing.remove());
             }
             frameImageIndex = nextIndex;
             image.src = frameSlideshow.images[frameImageIndex];
             image.alt = `${frameSlideshow.name}, image ${frameImageIndex + 1} of ${frameSlideshow.images.length}`;
             updateCounter();
+            if (outgoing) {
+              const distance = cover.getBoundingClientRect().width;
+              const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
+              image.animate([
+                { transform: `translateX(${direction * distance}px)` },
+                { transform: 'translateX(0)' }
+              ], timing);
+              outgoing.animate([
+                { transform: 'translateX(0)' },
+                { transform: `translateX(${-direction * distance}px)` }
+              ], { ...timing, fill: 'forwards' }).finished.then(() => outgoing.remove(), () => outgoing.remove());
+            }
           };
           if (hasAutoplay) {
             counter.setAttribute('aria-live', 'off');
@@ -692,6 +703,33 @@
       spatialRowIndex++;
     }
     workGrid.appendChild(spatialProjectGrid);
+
+    if (!reduceMotion.matches) {
+      const revealGroups = new WeakMap();
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          revealGroups.get(entry.target)?.forEach((card) => card.classList.add('is-revealed'));
+          revealObserver.unobserve(entry.target);
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -4% 0px' });
+      const prepareReveal = (target, cards) => {
+        cards.forEach((card, index) => {
+          card.style.setProperty('--reveal-delay', `${index * 90}ms`);
+          card.style.setProperty('--reveal-tilt', `${index % 2 ? 1.25 : -1.25}deg`);
+          card.classList.add('project-scroll-reveal');
+        });
+        revealGroups.set(target, cards);
+        revealObserver.observe(target);
+      };
+      [...spatialProjectGrid.querySelectorAll('.spatial-project-row')].slice(1).forEach((row) => {
+        row.classList.add('is-scroll-reveal-row');
+        prepareReveal(row, [...row.querySelectorAll('.spatial-project-cover')]);
+      });
+      [...mobileSpatialCatalogue?.querySelectorAll('.mobile-spatial-catalogue-item') || []].slice(2).forEach((item) => {
+        prepareReveal(item, [item]);
+      });
+    }
 
     projects.forEach((project) => {
       if (project.hasAttribute('data-list-dropdown')) return;
@@ -1518,7 +1556,7 @@
       });
     });
 
-    function setView(view) {
+    function setView(view, { restoreImmediately = false } = {}) {
       const forcedMobileSpatial = mobileViewport.matches;
       if (forcedMobileSpatial) view = 'spatial';
       const isList = view === 'list';
@@ -1550,21 +1588,60 @@
         button.setAttribute('aria-pressed', String(button.dataset.view === view));
       });
       updateDisplayTypeForScroll();
-      window.requestAnimationFrame(() => {
+      const restoreScroll = () => {
         window.scrollTo({
           top: isList ? 0 : spatialScrollPosition,
           behavior: 'auto'
         });
         queueDisplayTypeUpdate();
-      });
+      };
+      let scrollRestored;
+      if (restoreImmediately) {
+        restoreScroll();
+        scrollRestored = Promise.resolve();
+      } else {
+        scrollRestored = new Promise((resolve) => window.requestAnimationFrame(() => {
+          restoreScroll();
+          resolve();
+        }));
+      }
 
       try {
         if (!forcedMobileSpatial) localStorage.setItem('graphic-project-view', view);
       } catch (error) {}
+      return scrollRestored;
+    }
+
+    let activeViewTransition = null;
+    let queuedView = null;
+    function transitionView(view) {
+      if (activeViewTransition) {
+        queuedView = view;
+        activeViewTransition.skipTransition();
+        return;
+      }
+      if (view === activeView) return;
+      if (!document.startViewTransition || reduceMotion.matches || mobileViewport.matches) {
+        setView(view);
+        return;
+      }
+      document.documentElement.dataset.viewDirection = view === 'list' ? 'to-all' : 'to-selected';
+      const transition = document.startViewTransition(() => setView(view, { restoreImmediately: true }));
+      activeViewTransition = transition;
+      transition.ready.catch(() => {});
+      transition.finished.catch(() => {}).finally(() => {
+        activeViewTransition = null;
+        delete document.documentElement.dataset.viewDirection;
+        if (queuedView) {
+          const next = queuedView;
+          queuedView = null;
+          transitionView(next);
+        }
+      });
     }
 
     viewButtons.forEach((button) => {
-      button.addEventListener('click', () => setView(button.dataset.view));
+      button.addEventListener('click', () => transitionView(button.dataset.view));
     });
 
     function animateScrollPosition(scroller, targetTop, duration = 720) {
