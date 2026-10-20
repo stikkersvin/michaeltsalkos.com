@@ -11,7 +11,7 @@
   document.body.classList.toggle('dark', storedDark !== null ? storedDark : true);
 
   document.querySelectorAll(
-    '.site-topbar, .topbar-nav, .topbar-header, .topbar-mobile-nav, .topbar-about, .topbar-switch'
+    '.site-topbar, .site-copyright, .topbar-nav, .topbar-header, .topbar-mobile-nav, .topbar-about, .topbar-switch'
   ).forEach((element) => element.remove());
 
   const path = decodeURIComponent(window.location.pathname || '');
@@ -77,6 +77,7 @@
     </button>
     </div>
     </div>
+    <small class="site-copyright">©2026</small>
   `;
 
   const wrapper = document.createElement('div');
@@ -101,6 +102,8 @@
       links.innerHTML = `<a href="${linkGraphic}">Selected</a><a href="${base}/index.html?view=list">All</a>`;
       slot.appendChild(links);
     }
+    sharedBar.querySelectorAll('.topbar-links a, .topbar-tools > a, .topbar-view-links a, .view-toggle button')
+      .forEach((item) => item.classList.add('topbar-item'));
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountViewToggle, { once: true });

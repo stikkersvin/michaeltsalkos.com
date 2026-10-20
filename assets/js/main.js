@@ -246,7 +246,7 @@
       const counter = document.createElement('span');
       counter.className = 'spatial-project-counter mixed-preview-counter';
       counter.setAttribute('aria-live', 'polite');
-      const updateCounter = () => { counter.textContent = `${index + 1} / ${sources.length}`; };
+      const updateCounter = () => { counter.textContent = `[ ${index + 1} / ${sources.length} ]`; };
       const stopVideo = (media) => {
         if (media?.tagName !== 'VIDEO') return;
         media.pause();
@@ -628,7 +628,7 @@
           counter.className = 'spatial-project-counter';
           counter.setAttribute('aria-live', 'polite');
           const updateCounter = () => {
-            counter.textContent = `${frameImageIndex + 1} / ${frameSlideshow.images.length}`;
+            counter.textContent = `[ ${frameImageIndex + 1} / ${frameSlideshow.images.length} ]`;
           };
           let frameLoadId = 0;
           let outgoingImage = null;
@@ -1039,6 +1039,71 @@
       project.querySelector(':scope > .list-row').addEventListener('click', toggleDetails);
       formatCell.append(formatLabel, readMore);
     });
+    workGrid.querySelectorAll('.project > .list-row, .list-dropdown-row[data-quick-view]').forEach((row) => {
+      const cells = [...row.children].filter((cell) => cell.textContent.trim());
+      if (!cells.length) return;
+      row.classList.add('all-bracket-row');
+      cells[0].classList.add('all-row-start');
+      cells[cells.length - 1].classList.add('all-row-end');
+      cells.forEach((cell) => {
+        const viewport = document.createElement('span');
+        viewport.className = 'all-text-viewport';
+        const track = document.createElement('span');
+        track.className = 'all-text-track';
+        track.append(...cell.childNodes);
+        viewport.appendChild(track);
+        cell.classList.add('all-text-cell');
+        cell.appendChild(viewport);
+      });
+    });
+    const allMarqueeAnimations = new Map();
+    const allBracketRows = [...workGrid.querySelectorAll('.all-bracket-row')];
+    let allMarqueeFrame = null;
+    function queueAllMarquees() {
+      if (allMarqueeFrame !== null) return;
+      allMarqueeFrame = window.requestAnimationFrame(() => {
+        allMarqueeFrame = null;
+        const isList = document.body.classList.contains('list-view');
+        allBracketRows.forEach((row) => {
+          const active = isList && (row.matches(':hover, :focus-within, .is-all-preview-source')
+            || row.parentElement.matches('.is-all-preview-source, .project:focus-visible'));
+          row.querySelectorAll('.all-text-viewport').forEach((viewport) => {
+            const track = viewport.firstElementChild;
+            const distance = Math.max(0, track.scrollWidth - viewport.clientWidth);
+            const previous = allMarqueeAnimations.get(viewport);
+            if (!active || !viewport.clientWidth || distance < 2 || reduceMotion.matches) {
+              previous?.animation.cancel();
+              allMarqueeAnimations.delete(viewport);
+              viewport.classList.remove('is-marquee');
+              return;
+            }
+            if (previous && Math.abs(previous.distance - distance) < 1) return;
+            previous?.animation.cancel();
+            viewport.classList.add('is-marquee');
+            const pause = 900;
+            const travel = Math.max(1600, distance / 22 * 1000);
+            const duration = travel * 2 + pause * 2;
+            const animation = track.animate([
+              { transform: 'translateX(0)', offset: 0 },
+              { transform: 'translateX(0)', offset: pause / duration },
+              { transform: `translateX(${-distance}px)`, offset: (pause + travel) / duration },
+              { transform: `translateX(${-distance}px)`, offset: (pause * 2 + travel) / duration },
+              { transform: 'translateX(0)', offset: 1 }
+            ], { duration, iterations: Infinity, easing: 'linear' });
+            allMarqueeAnimations.set(viewport, { animation, distance });
+          });
+        });
+      });
+    }
+    allBracketRows.forEach((row) => {
+      row.addEventListener('pointerenter', queueAllMarquees);
+      row.addEventListener('pointerleave', queueAllMarquees);
+      row.addEventListener('focusin', queueAllMarquees);
+      row.addEventListener('focusout', queueAllMarquees);
+    });
+    const allTextResizeObserver = new ResizeObserver(queueAllMarquees);
+    workGrid.querySelectorAll('.all-text-viewport').forEach((viewport) => allTextResizeObserver.observe(viewport));
+    reduceMotion.addEventListener('change', queueAllMarquees);
     setAllDetailsOpen(false);
 
     function moveAllPreview(direction, { automatic = false } = {}) {
@@ -1195,7 +1260,7 @@
       if (count > 1) {
         const counter = document.createElement('span');
         counter.className = 'all-preview-counter';
-        counter.textContent = `${index + 1} / ${count}`;
+        counter.textContent = `[ ${index + 1} / ${count} ]`;
         allPreviewMedia.appendChild(counter);
       }
       if (allAutoplayPending?.loadId === loadId) allAutoplayPending = null;
@@ -1233,6 +1298,9 @@
         allPreviewCopy.appendChild(summary);
       }
       projects.forEach((item) => item.classList.toggle('is-all-preview-active', item === project));
+      workGrid.querySelectorAll('.is-all-preview-source').forEach((item) => item.classList.remove('is-all-preview-source'));
+      source.classList.add('is-all-preview-source');
+      queueAllMarquees();
       renderAllPreviewMedia(direction);
     }
 
@@ -1755,6 +1823,7 @@
       viewButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.view === view));
       });
+      queueAllMarquees();
       updateDisplayTypeForScroll();
       const restoreScroll = () => {
         window.scrollTo({
@@ -1810,6 +1879,13 @@
 
     viewButtons.forEach((button) => {
       button.addEventListener('click', () => transitionView(button.dataset.view));
+    });
+
+    document.querySelector('.topbar-name')?.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (activeView !== 'list' && !activeViewTransition) return;
+      event.preventDefault();
+      transitionView('spatial');
     });
 
     function animateScrollPosition(scroller, targetTop, duration = 720) {
@@ -1933,6 +2009,7 @@
     new MutationObserver((mutations) => {
       if (!mutations.some((mutation) => mutation.attributeName === 'class')) return;
       displayTypeLayers.forEach(({ project, layer }) => renderDisplayTypeLayer(project, layer));
+      queueAllMarquees();
       queueDisplayTypeUpdate();
     }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 

@@ -2310,6 +2310,17 @@
         left: 10%;
       }
 
+      .spatial-project-cover[data-display-type="Du minder|mig om|"] > video {
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+      }
+
+      .spatial-project-cover[data-display-type="Du minder|mig om|"] > video.spatial-project-outgoing {
+        top: 0;
+        left: 0;
+      }
+
       .spatial-project-caption {
         position: absolute;
         top: calc(50% + 2rem);
@@ -2370,6 +2381,7 @@
     }
 
     body.list-view {
+      --all-side-padding: 1.5rem;
       height: 100svh;
       overflow: hidden;
     }
@@ -2380,7 +2392,7 @@
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       gap: 1rem;
-      padding: 1.25rem 1.5rem;
+      padding: 1rem var(--all-side-padding) 1.25rem;
       background: var(--page);
       color: var(--ink);
       font-size: 0.75rem;
@@ -2391,7 +2403,7 @@
     .all-preview-heading {
       margin: 0;
       font: inherit;
-      font-weight: 500;
+      font-weight: 400;
     }
 
     .all-preview-content {
@@ -2510,7 +2522,7 @@
       width: 50%;
       height: auto;
       min-height: 0;
-      padding: 1rem 1.5rem;
+      padding: 0 var(--all-side-padding) 1rem;
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -2524,9 +2536,10 @@
       column-gap: 1rem;
     }
 
-    body.list-view .list-row span {
-      white-space: normal;
-      overflow-wrap: anywhere;
+    body.list-view .list-row span,
+    body.list-view .list-dropdown-row[data-quick-view] > span {
+      white-space: nowrap;
+      overflow-wrap: normal;
     }
 
     body.list-view .project {
@@ -2568,10 +2581,12 @@
 
     body.list-view .list-header {
       position: sticky;
-      top: -1rem;
+      top: 0;
       z-index: 4;
       flex-shrink: 0;
-      padding: 0.75rem 0;
+      padding: 1rem 0;
+      font-weight: 400;
+      line-height: 1.5;
       background: var(--page);
       opacity: 1;
     }
@@ -2584,11 +2599,84 @@
 
     body.list-view .is-all-preview-active > .list-row {
       opacity: 1;
-      text-decoration: underline;
-      text-underline-offset: 0.12em;
+    }
+
+    body.list-view .work-grid .project > .list-row,
+    body.list-view .work-grid .list-dropdown-row[data-quick-view] {
+      text-decoration: none;
+      text-transform: none;
+    }
+
+    body.list-view .work-grid .all-bracket-row {
+      --all-bracket-visibility: hidden;
+    }
+
+    body.list-view .work-grid .all-text-cell {
+      display: flex;
+      min-width: 0;
+      overflow: visible;
+      white-space: nowrap;
+    }
+
+    body.list-view .work-grid .all-text-viewport {
+      display: block;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    body.list-view .work-grid .all-text-track {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    body.list-view .work-grid .is-marquee > .all-text-track {
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    body.list-view .work-grid .all-row-end::after {
+      flex: 0 0 auto;
+    }
+
+    body.list-view .work-grid :is(
+      .all-bracket-row:hover,
+      .all-bracket-row:focus-within,
+      .all-bracket-row.is-all-preview-source,
+      .project.is-all-preview-source > .all-bracket-row,
+      .project:focus-visible > .all-bracket-row
+    ) {
+      --all-bracket-visibility: visible;
+    }
+
+    body.list-view .work-grid .all-bracket-row > .all-row-start {
+      position: relative;
+      overflow: visible;
+    }
+
+    body.list-view .work-grid .all-bracket-row > .all-row-start::before {
+      position: absolute;
+      right: 100%;
+      content: "[ ";
+      white-space: pre;
+      visibility: var(--all-bracket-visibility);
+    }
+
+    body.list-view .work-grid .all-bracket-row > .all-row-end::after {
+      content: " ]";
+      white-space: pre;
+      visibility: var(--all-bracket-visibility);
+    }
+
+    body.list-view .work-grid .all-bracket-row:hover {
+      opacity: 0.8;
     }
 
     @media (max-width: 760px) {
+      body.list-view { --all-side-padding: 0.75rem; }
       body.list-view .all-project-preview,
       body.list-view .work-grid {
         padding-right: 0.75rem;

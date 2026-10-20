@@ -32,7 +32,13 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   let dragSettle = null;
   const videoBackdrops = new WeakMap();
   const buttons = [];
-  const sourcesFor = (entry) => entry.video ? [entry.video, ...entry.images] : entry.images;
+  const footballImageNumber = (source) => Number(/GODILOVEFOOTBALL_(\d+)(?:\.preview)?\.(?:webp|jpe?g|png)(?:\?|$)/i.exec(source)?.[1]);
+  const sourcesFor = (entry) => {
+    // The lower images belong to their paired frame rather than separate slides.
+    const images = entry.displayType === 'God I Love|Football|'
+      ? entry.images.filter((source) => ![7, 10].includes(footballImageNumber(source))) : entry.images;
+    return entry.video ? [entry.video, ...images] : images;
+  };
   const pauseAutoplay = () => window.clearTimeout(autoplayTimer);
   const retire = (media) => {
     const backdrop = videoBackdrops.get(media);
@@ -46,6 +52,25 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     media?.getAnimations().forEach((animation) => animation.cancel());
     media?.remove();
   };
+  function lowerStillSource(entry, source) {
+    if (entry.displayType === 'Du minder|mig om|') return source;
+    if (entry.displayType !== 'God I Love|Football|') return null;
+    const lowerNumber = { 5: 7, 9: 10 }[footballImageNumber(source)];
+    return lowerNumber ? entry.images.find((image) => footballImageNumber(image) === lowerNumber) : null;
+  }
+  function createStillPair(image, entry, lowerSource) {
+    const pair = document.createElement('div');
+    pair.className = 'mobile-selected-still-pair';
+    if (entry.displayType === 'Du minder|mig om|') pair.classList.add('mobile-selected-havtorn-still');
+    pair.setAttribute('role', 'img');
+    pair.setAttribute('aria-label', `${entry.name}, images above and below the navigation bar`);
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    const lowerImage = image.cloneNode();
+    lowerImage.src = lowerSource;
+    pair.append(image, lowerImage);
+    return pair;
+  }
   function addVideoBackdrop(video, entry) {
     if (entry.displayType !== 'Du minder|mig om|' || video.tagName !== 'VIDEO') return null;
     video.classList.add('mobile-selected-havtorn-video');
@@ -103,13 +128,15 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       const source = sources[nextImage];
       const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
       // Use the supplied still as a video poster during the drag when possible.
-      const preview = isVideo && !entry.images[0]
+      let preview = isVideo && !entry.images[0]
         ? createVideo(source, entry.name, { eager: true }) : new Image();
       if (preview.tagName === 'IMG') {
         preview.src = isVideo ? entry.images[0] : source;
         preview.alt = '';
         preview.draggable = false;
       }
+      const lowerSource = !isVideo && lowerStillSource(entry, source);
+      if (lowerSource) preview = createStillPair(preview, entry, lowerSource);
       dragPreview = document.createElement('div');
       dragPreview.className = 'mobile-selected-drag-preview';
       dragPreview.classList.toggle('is-contained', entry.contained);
@@ -148,7 +175,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     const sources = sourcesFor(entry);
     const source = sources[nextImage];
     const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
-    const next = isVideo ? createVideo(source, entry.name, { eager: true }) : new Image();
+    let next = isVideo ? createVideo(source, entry.name, { eager: true }) : new Image();
     error = false;
     stage.setAttribute('aria-busy', 'true');
     try {
@@ -165,6 +192,11 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
         next.draggable = false;
         next.src = source;
         await next.decode();
+        const lowerSource = lowerStillSource(entry, source);
+        if (lowerSource) {
+          next = createStillPair(next, entry, lowerSource);
+          await Promise.all([...next.children].map((image) => image.decode()));
+        }
       }
     } catch {
       retire(next);
@@ -196,7 +228,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     stage.dataset.displayType = entry.displayType;
     stage.classList.toggle('is-contained', entry.contained);
     caption.replaceChildren(...entry.caption.cloneNode(true).childNodes);
-    imageCount.textContent = `${imageIndex + 1} / ${sources.length}`;
+    imageCount.textContent = `[ ${imageIndex + 1} / ${sources.length} ]`;
     projectCount.textContent = `${projectIndex + 1} / ${entries.length}`;
     stage.setAttribute('aria-label', `${entry.name}. Swipe left or right for images; up or down for projects.`);
     stage.setAttribute('aria-busy', 'false');
