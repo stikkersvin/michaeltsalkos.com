@@ -2432,6 +2432,11 @@
       margin: 0;
     }
 
+    body.list-view .all-preview-copy .list-dropdown-essay {
+      max-height: none;
+      overflow: visible;
+    }
+
     .all-preview-media {
       position: relative;
       grid-row: 1;
@@ -2538,6 +2543,10 @@
       line-height: inherit;
       text-align: left;
       text-transform: none;
+      cursor: pointer;
+    }
+
+    body.list-view .project > .list-row {
       cursor: pointer;
     }
 

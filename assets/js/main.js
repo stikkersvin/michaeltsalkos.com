@@ -785,6 +785,24 @@
     }
     workGrid.appendChild(spatialProjectGrid);
 
+    const mobileSelected = window.createMobileSelected(spatialCovers.map((item, index) => {
+      const slideshow = mobileSlideshows[Number(item.dataset.slideshowIndex)];
+      const displayType = item.dataset.displayType;
+      return {
+        ...slideshow,
+        displayType,
+        caption: item.querySelector('figcaption'),
+        contained: displayType === 'Night|Journeys|'
+          || (containedCoverStart >= 0 && index >= containedCoverStart && displayType !== 'A Pattern|Language|'),
+        autoplay: displayType === 'Night|Journeys|' || displayType === 'O Days|Volunteer|Merchandise'
+      };
+    }), {
+      viewport: mobileViewport,
+      reduceMotion,
+      createVideo: createPreviewVideo,
+      stopVideo: (video) => { video.pause(); previewVideoObserver.unobserve(video); }
+    });
+
     if (!reduceMotion.matches) {
       const revealGroups = new WeakMap();
       const revealObserver = new IntersectionObserver((entries) => {
@@ -949,8 +967,44 @@
     let allPreviewLoadId = 0;
     let allPreviewPointer = null;
     let suppressAllHover = false;
+    let allPreviewHovered = false;
+    let allAutoplayTimer = null;
+    let allAutoplayPending = null;
     allPreviewMedia.setAttribute('role', 'group');
     allPreviewMedia.setAttribute('aria-label', 'Project preview. Left and Right browse images; Up and Down browse projects.');
+
+    function pauseAllAutoplay() {
+      window.clearTimeout(allAutoplayTimer);
+      allAutoplayTimer = null;
+      if (allAutoplayPending) {
+        // Keep the displayed frame when hovering during an automatic load.
+        allPreviewLoadId++;
+        allPreviewIndex = allAutoplayPending.previousIndex;
+        allAutoplayPending = null;
+      }
+    }
+
+    function scheduleAllAutoplay() {
+      window.clearTimeout(allAutoplayTimer);
+      allAutoplayTimer = null;
+      if (allPreviewHovered || document.hidden || !document.body.classList.contains('list-view')
+        || allPreviewImages.length < 2) return;
+      allAutoplayTimer = window.setTimeout(() => moveAllPreview(1, { automatic: true }), 2000);
+    }
+
+    allPreview.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'touch') return;
+      allPreviewHovered = true;
+      pauseAllAutoplay();
+    });
+    allPreview.addEventListener('pointerleave', () => {
+      allPreviewHovered = false;
+      scheduleAllAutoplay();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pauseAllAutoplay();
+      else scheduleAllAutoplay();
+    });
 
     function setAllDetailsOpen(open) {
       allPreview.classList.toggle('is-details-open', open);
@@ -971,23 +1025,28 @@
       const readMore = document.createElement('button');
       readMore.type = 'button';
       readMore.className = 'all-read-more';
-      readMore.textContent = 'read more about this project';
+      readMore.textContent = 'More Details';
       readMore.setAttribute('aria-controls', allPreviewCopy.id);
       readMore.setAttribute('aria-expanded', 'false');
-      readMore.addEventListener('click', (event) => {
+      const toggleDetails = (event) => {
+        if (!document.body.classList.contains('list-view')) return;
         event.preventDefault();
         event.stopPropagation();
         showAllPreview(project);
         setAllDetailsOpen(!allPreview.classList.contains('is-details-open'));
-      });
+      };
+      readMore.addEventListener('click', toggleDetails);
+      project.querySelector(':scope > .list-row').addEventListener('click', toggleDetails);
       formatCell.append(formatLabel, readMore);
     });
     setAllDetailsOpen(false);
 
-    function moveAllPreview(direction) {
+    function moveAllPreview(direction, { automatic = false } = {}) {
       if (allPreviewMedia.dataset.canBrowse !== 'true') return;
+      pauseAllAutoplay();
+      const previousIndex = allPreviewIndex;
       allPreviewIndex = (allPreviewIndex + direction + allPreviewImages.length) % allPreviewImages.length;
-      renderAllPreviewMedia(direction, 'horizontal');
+      renderAllPreviewMedia(direction, 'horizontal', automatic ? previousIndex : null);
     }
 
     function allPreviewDirection(event) {
@@ -1063,8 +1122,9 @@
       moveAllProject(event.key === 'ArrowUp' ? -1 : 1);
     });
 
-    async function renderAllPreviewMedia(direction = 1, motion = 'vertical') {
+    async function renderAllPreviewMedia(direction = 1, motion = 'vertical', automaticPreviousIndex = null) {
       const loadId = ++allPreviewLoadId;
+      if (automaticPreviousIndex !== null) allAutoplayPending = { loadId, previousIndex: automaticPreviousIndex };
       const source = allPreviewImages[allPreviewIndex];
       const name = allPreviewHeading.textContent;
       const index = allPreviewIndex;
@@ -1138,12 +1198,15 @@
         counter.textContent = `${index + 1} / ${count}`;
         allPreviewMedia.appendChild(counter);
       }
+      if (allAutoplayPending?.loadId === loadId) allAutoplayPending = null;
+      scheduleAllAutoplay();
     }
 
     function showAllPreview(source, force = false) {
       if (!document.body.classList.contains('list-view') || (!force && activeAllSource === source)) return;
       const project = source.closest('.project');
       if (!project) return;
+      pauseAllAutoplay();
       const direction = activeAllSource && (activeAllSource.compareDocumentPosition(source) & Node.DOCUMENT_POSITION_PRECEDING) ? -1 : 1;
       if (force || activeAllSource?.closest('.project') !== project) setAllDetailsOpen(false);
       activeAllSource = source;
@@ -1448,6 +1511,7 @@
 
     function updateDisplayTypeForScroll() {
       displayTypeUpdateQueued = false;
+      if (mobileViewport.matches) return;
       const mobileScrollTop = mobileViewport.matches && !document.body.classList.contains('list-view') && workGrid
         ? workGrid.scrollTop
         : window.scrollY;
@@ -1685,6 +1749,7 @@
         hideQuickView();
         showAllPreview(activeAllSource || orderedProjects[0], true);
       } else {
+        pauseAllAutoplay();
         allPreviewMedia.querySelectorAll('video').forEach((video) => video.pause());
       }
       viewButtons.forEach((button) => {
@@ -1782,6 +1847,7 @@
     }
 
     function scrollToNextProjectCenter() {
+      if (mobileViewport.matches) { mobileSelected.nextProject(); return; }
       const isMobileSpatial = mobileViewport.matches && !document.body.classList.contains('list-view');
       const scroller = isMobileSpatial ? workGrid : window;
       const candidates = isMobileSpatial

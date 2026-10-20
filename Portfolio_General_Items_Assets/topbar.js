@@ -73,7 +73,7 @@
       <div class="topbar-view-slot"></div>
       <a href="${linkAbout}" ${isAbout ? 'aria-current="page"' : ''}>About</a>
     <button class="topbar-theme" id="sharedThemeSwitch" role="switch" aria-checked="false" aria-label="Toggle dark mode">
-      <div class="topbar-knob" id="sharedKnob"></div>
+      <img class="topbar-knob" id="sharedKnob" src="${base}/favicon.png" alt="" aria-hidden="true" draggable="false" />
     </button>
     </div>
     </div>

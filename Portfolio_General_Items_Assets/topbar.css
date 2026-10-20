@@ -137,11 +137,17 @@ body.list-view .site-topbar:focus-within {
 }
 
 .site-topbar .topbar-knob {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.35;
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+}
+
+body.dark .site-topbar .topbar-knob {
+  filter: invert(1);
+  mix-blend-mode: screen;
 }
 
 .site-topbar .topbar-theme[aria-checked="true"] .topbar-knob,
@@ -180,6 +186,31 @@ body.list-view .site-topbar:focus-within {
   .site-topbar .topbar-theme {
     flex-basis: 1.75rem;
     margin-right: -0.35rem;
+  }
+}
+
+@media (max-width: 760px) and (pointer: coarse) {
+  body .site-topbar,
+  body.dark .site-topbar {
+    --bar-background: transparent;
+    --bar-ink: #fff;
+    --bar-rule: rgba(255, 255, 255, 0.12);
+    mix-blend-mode: difference;
+  }
+  ::view-transition-group(site-navigation) { mix-blend-mode: difference; }
+  .site-topbar { font-size: clamp(7px, 2vw, 10px); }
+  .site-topbar > * { padding: 0.4rem 0.25rem; }
+  .site-topbar .topbar-links { gap: 0.25rem 0.5rem; }
+  .site-topbar .topbar-tools { gap: 0.4rem; }
+  .site-topbar .topbar-view-slot { display: block; }
+  .site-topbar [data-view="list"],
+  .site-topbar .topbar-view-links a[href*="view=list"] { display: none; }
+  .site-topbar .topbar-theme { flex-basis: 1.25rem; margin-right: -0.25rem; }
+  body .site-topbar .topbar-knob {
+    width: 1rem;
+    height: 1rem;
+    filter: invert(1);
+    mix-blend-mode: normal;
   }
 }
 
