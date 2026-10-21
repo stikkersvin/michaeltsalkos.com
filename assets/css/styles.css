@@ -6,6 +6,140 @@
       --pad: 1.5rem;
     }
 
+    /* Back only the transparent chest print, preserving the shirt cutout. */
+    img[src*="Portfolio_QuickView_WEDDING_7_White"] {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 1000'%3E%3Crect x='425' y='315' width='160' height='85' fill='white'/%3E%3C/svg%3E");
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+
+    html.desktop-landing-pending .spatial-project-cover::after,
+    html.desktop-landing-pending .all-preview-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      background: #000;
+      pointer-events: none;
+    }
+
+    .desktop-opening-reel {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      overflow: hidden;
+      background: #000;
+      pointer-events: none;
+    }
+
+    .desktop-opening-track {
+      position: absolute;
+      inset: 0;
+      perspective-origin: center;
+      transform-style: preserve-3d;
+    }
+
+    .desktop-opening-frame {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+
+    .desktop-opening-frame > img,
+    .desktop-opening-frame > video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      object-fit: cover;
+    }
+
+    .desktop-opening-frame.is-contained > img,
+    .desktop-opening-frame.is-contained > video {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+    }
+
+    .desktop-opening-frame.is-list > img,
+    .desktop-opening-frame.is-list > video {
+      object-fit: contain;
+    }
+
+    html.desktop-opening-active .spatial-project-caption,
+    html.desktop-opening-active .spatial-project-counter,
+    html.desktop-opening-active .all-preview-counter { visibility: hidden; }
+
+    .desktop-page-turn {
+      position: absolute;
+      z-index: 4;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .desktop-page-stationary,
+    .desktop-page-leaf {
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+    }
+
+    .desktop-page-stationary,
+    .desktop-page-face {
+      background-color: #fff;
+      background-size: 200% 100%;
+      background-repeat: no-repeat;
+    }
+
+    .desktop-page-turn[data-direction="next"] .desktop-page-stationary {
+      left: 0;
+      background-position: left center;
+    }
+
+    .desktop-page-turn[data-direction="previous"] .desktop-page-stationary {
+      right: 0;
+      background-position: right center;
+    }
+
+    .desktop-page-leaf { transform-style: preserve-3d; will-change: transform; }
+    .desktop-page-strip {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+    .desktop-page-turn[data-direction="next"] .desktop-page-strip { transform-origin: left center; }
+    .desktop-page-turn[data-direction="previous"] .desktop-page-strip { transform-origin: right center; }
+    .desktop-page-strip > .desktop-page-face { right: -1px; }
+    .desktop-page-turn[data-direction="next"] .desktop-page-leaf { left: 50%; transform-origin: left center; }
+    .desktop-page-turn[data-direction="previous"] .desktop-page-leaf { left: 0; transform-origin: right center; }
+
+    .desktop-page-face,
+    .desktop-page-shade { position: absolute; inset: 0; backface-visibility: hidden; }
+    .desktop-page-back { transform: rotateY(180deg); }
+    .desktop-page-turn[data-direction="next"] .desktop-page-front,
+    .desktop-page-turn[data-direction="previous"] .desktop-page-back { background-position: right center; }
+    .desktop-page-turn[data-direction="next"] .desktop-page-back,
+    .desktop-page-turn[data-direction="previous"] .desktop-page-front { background-position: left center; }
+    .desktop-page-shade {
+      background: #000;
+      transform: translateZ(0.2px);
+    }
+
+    .spatial-project-cover:has(> .desktop-page-turn) > :is(.spatial-project-caption, .spatial-project-counter),
+    .all-preview-media:has(> .desktop-page-turn) > .all-preview-counter { z-index: 5; }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -2255,6 +2389,57 @@
         cursor: default;
       }
 
+      /* Keep spreads fully visible with black space. */
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_5.webp"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_5.webp"],
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_7.webp"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_7.webp"],
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_2.webp"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_2.webp"],
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_9.webp"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_9.webp"],
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_10.webp"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_10.webp"],
+      .spatial-project-cover > img[src$="GODILOVEFOOTBALL_Pair_7_5.svg"],
+      .all-preview-media > img[src$="GODILOVEFOOTBALL_Pair_7_5.svg"],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_8."],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_9."],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_11."],
+      .all-preview-media > img[src*="HOUNDSTOOTH_8."],
+      .all-preview-media > img[src*="HOUNDSTOOTH_9."],
+      .all-preview-media > img[src*="HOUNDSTOOTH_11."] {
+        width: 100%;
+        height: 100%;
+        padding: 1rem;
+        object-fit: contain;
+        object-position: center;
+        background: #000;
+      }
+
+      .spatial-project-cover > img[src*="GODILOVEFOOTBALL_"][src$="_Left.svg"],
+      .spatial-project-cover > img[src*="GODILOVEFOOTBALL_"][src$="_Right.svg"],
+      .all-preview-media > img[src*="GODILOVEFOOTBALL_"][src$="_Left.svg"],
+      .all-preview-media > img[src*="GODILOVEFOOTBALL_"][src$="_Right.svg"],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_8"][src$="_Left.svg"],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_8"][src$="_Right.svg"],
+      .all-preview-media > img[src*="HOUNDSTOOTH_8"][src$="_Left.svg"],
+      .all-preview-media > img[src*="HOUNDSTOOTH_8"][src$="_Right.svg"] {
+        width: 100%;
+        height: 100%;
+        padding: 10% 0 10% 10%;
+        object-fit: contain;
+        object-position: right center;
+        background: #000;
+      }
+
+      .spatial-project-cover > img[src*="GODILOVEFOOTBALL_"][src$="_Right.svg"],
+      .all-preview-media > img[src*="GODILOVEFOOTBALL_"][src$="_Right.svg"],
+      .spatial-project-cover > img[src*="HOUNDSTOOTH_8"][src$="_Right.svg"],
+      .all-preview-media > img[src*="HOUNDSTOOTH_8"][src$="_Right.svg"] {
+        padding: 10% 10% 10% 0;
+        object-position: left center;
+      }
+
       /* Move O Days photo 6 slightly left within the cropped preview. */
       .spatial-project-cover > img[src*="ODAYS_Instagram_6"] {
         object-position: 65% center;
@@ -2711,3 +2896,61 @@
         animation: none;
       }
     }
+
+/* Comperi stays within one viewport; the lower images crop to the remaining space. */
+@media (min-width: 761px) {
+  .spatial-project-cover.comperi-split-frame {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    gap: 0;
+    background: #000;
+  }
+  .spatial-project-row:has(.comperi-split-frame) {
+    height: 100svh;
+    min-height: 0;
+  }
+  .comperi-split-panel { position: relative; min-height: 0; overflow: hidden; }
+  .comperi-split-panel:first-child {
+    width: 100%;
+    aspect-ratio: 1;
+    max-height: 60svh;
+  }
+  .comperi-split-panel > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: cover;
+  }
+  .comperi-split-panel > .spatial-project-outgoing { position: absolute; inset: 0; }
+  .comperi-split-panel[data-cursor-direction="previous"] { cursor: w-resize; }
+  .comperi-split-panel[data-cursor-direction="next"] { cursor: e-resize; }
+}
+
+@media (min-width: 761px) {
+  .spatial-project-cover.queer-noir-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    background: #000;
+  }
+  .spatial-project-cover.queer-noir-pair > img {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    object-fit: cover;
+  }
+}
+
+/* Repeat the two LAF wordmarks at their natural proportions across the frame. */
+img[src$="Portfolio_QuickView_LAF_PopUp_4_5_Repeat.svg"] {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  object-fit: none !important;
+  object-position: -100000px -100000px !important;
+  background-image: url("../../Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_4_5_Repeat.svg");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  background-position: center top;
+}

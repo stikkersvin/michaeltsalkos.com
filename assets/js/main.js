@@ -11,6 +11,265 @@
     const scrollCue = document.querySelector('.scroll-cue');
     const spatialIntro = document.querySelector('.spatial-intro');
     const mobileViewport = window.matchMedia('(max-width: 760px) and (pointer: coarse)');
+    const desktopPageTurns = new WeakMap();
+    function revealDesktopBar() {
+      const html = document.documentElement;
+      if (!html.classList.contains('desktop-landing-pending')) return;
+      if (mobileViewport.matches || reduceMotion.matches) {
+        html.classList.remove('desktop-landing-pending');
+        return;
+      }
+      const bar = document.querySelector('.site-topbar');
+      if (!bar) { html.classList.remove('desktop-landing-pending'); return; }
+      try { sessionStorage.setItem('portfolio-desktop-opening-seen', '1'); } catch (error) {}
+      const timing = { duration: 3800, easing: 'cubic-bezier(0.12, 0.72, 0.18, 1)', fill: 'forwards' };
+      const openingWidth = innerWidth;
+      const openingHeight = innerHeight;
+      const start = document.timeline.currentTime;
+      const brackets = document.createElement('div');
+      brackets.className = 'desktop-opening-brackets';
+      brackets.setAttribute('aria-hidden', 'true');
+      brackets.innerHTML = '<span>[</span><span>]</span>';
+      document.body.appendChild(brackets);
+      const animations = [bar.animate([
+        { clipPath: 'inset(calc(50% - 0.5px) 50%)' }, { clipPath: 'inset(0px 0)' }
+      ], timing)];
+      [...brackets.children].forEach((bracket, index) => {
+        const from = index ? 0 : -8;
+        const to = index ? innerWidth / 2 - 20 : -innerWidth / 2 + 12;
+        animations.push(bracket.animate([
+          { transform: `translate(${from}px, -50%)` }, { transform: `translate(${to}px, -50%)` }
+        ], timing));
+      });
+      animations.push(brackets.animate([
+        { opacity: 1 }, { opacity: 1, offset: 0.9 }, { opacity: 0 }
+      ], { duration: timing.duration, fill: 'forwards' }));
+      const reels = createDesktopOpeningReels(animations, timing);
+      html.classList.add('desktop-opening-active');
+      if (start !== null) animations.forEach((animation) => { animation.startTime = start; });
+      html.classList.remove('desktop-landing-pending');
+      const finish = () => {
+        animations.forEach((animation) => animation.cancel());
+        brackets.remove();
+        reels.forEach((reel) => {
+          reel.querySelectorAll('video').forEach((video) => {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          });
+          reel.remove();
+        });
+        html.classList.remove('desktop-opening-active');
+        document.removeEventListener('pointerdown', finish);
+        document.removeEventListener('keydown', finish);
+        window.removeEventListener('wheel', finish);
+        window.removeEventListener('resize', onResize);
+        reduceMotion.removeEventListener('change', finish);
+        window.removeEventListener('pagehide', finish);
+        window.dispatchEvent(new Event('portfolio:desktop-opening-finished'));
+      };
+      const onResize = () => {
+        if (innerWidth !== openingWidth || innerHeight !== openingHeight) finish();
+      };
+      document.addEventListener('pointerdown', finish, { once: true });
+      document.addEventListener('keydown', finish, { once: true });
+      window.addEventListener('wheel', finish, { once: true, passive: true });
+      window.addEventListener('resize', onResize);
+      reduceMotion.addEventListener('change', finish, { once: true });
+      window.addEventListener('pagehide', finish, { once: true });
+      animations[0].finished.then(finish, () => {});
+    }
+    function createDesktopOpeningReels(animations, timing) {
+      const isList = document.body.classList.contains('list-view');
+      const targets = isList ? [allPreviewMedia] : [...document.querySelectorAll('.spatial-project-cover')].filter((cover) => {
+        const bounds = cover.getBoundingClientRect();
+        return bounds.top < innerHeight && bounds.bottom > 0 && bounds.width > 0;
+      });
+      const faces = spatialCovers.map((item, index) => {
+        const slideshow = mobileSlideshows[Number(item.dataset.slideshowIndex)];
+        return {
+          source: slideshow.images[0] || slideshow.video,
+          contained: item.dataset.displayType === 'Night|Journeys|'
+            || (containedCoverStart >= 0 && index >= containedCoverStart
+              && !['A Pattern|Language|', 'Houndstooth||', 'God I Love|Football|', 'Second|Edition|', 'First Things|First *(2026)', 'The|Internet|Is Dying', 'The Gram|As Personal Branding|'].includes(item.dataset.displayType))
+        };
+      });
+      return targets.map((target, targetIndex) => {
+        const reel = document.createElement('div');
+        reel.className = 'desktop-opening-reel';
+        reel.setAttribute('aria-hidden', 'true');
+        const track = document.createElement('div');
+        track.className = 'desktop-opening-track';
+        reel.appendChild(track);
+        const height = Math.max(1, target.clientHeight);
+        track.style.perspective = `${height * 1.5}px`;
+        const addFace = (face, clone = null) => {
+          const frame = document.createElement('div');
+          frame.className = 'desktop-opening-frame';
+          frame.classList.toggle('is-contained', !isList && !!face?.contained);
+          if (isList) frame.classList.add('is-list');
+          if (face || clone) {
+            const source = face?.source;
+            const video = clone?.tagName === 'VIDEO' || /\.(mp4|mov|webm)(?:\?|$)/i.test(source || '');
+            const media = clone ? clone.cloneNode(true) : video ? document.createElement('video') : new Image();
+            media.className = '';
+            media.removeAttribute('style');
+            if (source) media.src = source;
+            if (video) {
+              media.autoplay = false;
+              media.muted = true;
+              media.defaultMuted = true;
+              media.playsInline = true;
+              media.preload = 'auto';
+            } else {
+              media.alt = '';
+              media.loading = 'eager';
+              media.decoding = 'async';
+            }
+            frame.appendChild(media);
+          }
+          track.appendChild(frame);
+        };
+        addFace(null);
+        faces.forEach((_, index) => addFace(faces[(index + targetIndex) % faces.length]));
+        const current = target.querySelector('img:not(.spatial-project-outgoing):not(.all-preview-outgoing),video:not(.spatial-project-outgoing):not(.all-preview-outgoing)');
+        addFace({
+          source: current ? null : isList ? allPreviewImages[allPreviewIndex] : faces[targetIndex]?.source,
+          contained: target.classList.contains('spatial-project-contained')
+        }, current);
+        if (isList) {
+          // Keep the reel outside the media node, which replaces its children
+          // when the first preview finishes loading.
+          const bounds = target.getBoundingClientRect();
+          const parentBounds = allPreview.getBoundingClientRect();
+          Object.assign(reel.style, {
+            left: `${bounds.left - parentBounds.left}px`, top: `${bounds.top - parentBounds.top}px`,
+            right: 'auto', bottom: 'auto', width: `${bounds.width}px`, height: `${bounds.height}px`
+          });
+          allPreview.appendChild(reel);
+        } else target.appendChild(reel);
+        const steps = track.children.length - 1;
+        [...track.children].forEach((frame, index) => {
+          const positions = new Set([0, steps]);
+          for (let quarter = -12; quarter <= 12; quarter++) {
+            const position = index + quarter / 4;
+            if (position >= 0 && position <= steps) positions.add(position);
+          }
+          const keyframes = [...positions].sort((a, b) => a - b).map((position) => ({
+            offset: position / steps,
+            transform: window.portfolioWheelTransform(index - position, height),
+            opacity: Math.min(1, Math.max(0, (3 - Math.abs(index - position)) * 2))
+          }));
+          animations.push(frame.animate(keyframes, timing));
+        });
+        return reel;
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', revealDesktopBar, { once: true });
+    } else revealDesktopBar();
+    function animateDesktopWheel(container, incoming, outgoing, direction, axis = 'X', decodedSize = null) {
+      desktopPageTurns.get(container)?.cancel();
+      const isSpread = (image) => image?.tagName === 'IMG'
+        && /(?:HOUNDSTOOTH_(?:8|9|11)|GODILOVEFOOTBALL_(?:2|5|7|9|10))(?:\.preview)?\.webp(?:\?|$)/.test(image.getAttribute('src') || '');
+      if (axis === 'X' && isSpread(incoming) && isSpread(outgoing)) {
+        return animateDesktopPageTurn(container, incoming, outgoing, direction, decodedSize);
+      }
+      const distance = Math.max(1, axis === 'X' ? container.clientWidth : container.clientHeight);
+      container.style.perspective = `${distance * 1.5}px`;
+      const timing = { duration: 750, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)' };
+      incoming.animate(window.portfolioWheelKeyframes(direction, 0, distance, axis), timing);
+      if (outgoing) {
+        return outgoing.animate(window.portfolioWheelKeyframes(0, -direction, distance, axis),
+          { ...timing, fill: 'forwards' }).finished;
+      }
+      return Promise.resolve();
+    }
+    function animateDesktopPageTurn(container, incoming, outgoing, direction, decodedSize) {
+      const style = getComputedStyle(incoming);
+      const paddingLeft = parseFloat(style.paddingLeft) || 0;
+      const paddingTop = parseFloat(style.paddingTop) || 0;
+      const availableWidth = incoming.clientWidth - paddingLeft - (parseFloat(style.paddingRight) || 0);
+      const availableHeight = incoming.clientHeight - paddingTop - (parseFloat(style.paddingBottom) || 0);
+      const naturalWidth = decodedSize?.width || incoming.naturalWidth;
+      const naturalHeight = decodedSize?.height || incoming.naturalHeight;
+      const scale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight);
+      const width = naturalWidth * scale;
+      const height = naturalHeight * scale;
+      const book = document.createElement('div');
+      book.className = 'desktop-page-turn';
+      book.dataset.direction = direction > 0 ? 'next' : 'previous';
+      book.setAttribute('aria-hidden', 'true');
+      Object.assign(book.style, {
+        left: `${incoming.offsetLeft + paddingLeft + (availableWidth - width) / 2}px`,
+        top: `${incoming.offsetTop + paddingTop + (availableHeight - height) / 2}px`,
+        width: `${width}px`, height: `${height}px`, perspective: `${width * 2.5}px`
+      });
+      const stationary = document.createElement('div');
+      stationary.className = 'desktop-page-stationary';
+      const leaf = document.createElement('div');
+      leaf.className = 'desktop-page-leaf';
+      const oldSource = outgoing.src;
+      const newSource = incoming.src;
+      stationary.style.backgroundImage = `url(${JSON.stringify(oldSource)})`;
+      const timing = { duration: 1100, easing: 'cubic-bezier(0.3, 0.65, 0.2, 1)', fill: 'forwards' };
+      const bending = [];
+      const stripCount = 24;
+      const stripWidth = width / 2 / stripCount;
+      let hinge = leaf;
+      // Connected narrow strips form a continuous sheet. The spine stays
+      // fixed while the outer edge curls and then relaxes flat at the end.
+      for (let index = 0; index < stripCount; index++) {
+        const strip = document.createElement('div');
+        strip.className = 'desktop-page-strip';
+        strip.style.width = index === 0 ? `${100 / stripCount}%` : '100%';
+        strip.style[direction > 0 ? 'left' : 'right'] = index === 0 ? '0' : '100%';
+        const front = document.createElement('div');
+        front.className = 'desktop-page-face desktop-page-front';
+        const back = document.createElement('div');
+        back.className = 'desktop-page-face desktop-page-back';
+        const frontIndex = direction > 0 ? stripCount + index : stripCount - 1 - index;
+        const backIndex = direction > 0 ? stripCount - 1 - index : stripCount + index;
+        [[front, oldSource, frontIndex], [back, newSource, backIndex]].forEach(([face, source, slice]) => {
+          face.style.backgroundImage = `url(${JSON.stringify(source)})`;
+          face.style.backgroundSize = `${width}px ${height}px`;
+          face.style.backgroundPosition = `${-slice * stripWidth}px 0px`;
+          const shade = document.createElement('div');
+          shade.className = 'desktop-page-shade';
+          face.appendChild(shade);
+          const peakShade = 0.08 + 0.13 * (1 - index / (stripCount - 1));
+          bending.push(shade.animate(Array.from({ length: 9 }, (_, sample) => ({
+            offset: sample / 8, opacity: Math.sin(Math.PI * sample / 8) * peakShade
+          })), timing));
+        });
+        strip.append(front, back);
+        hinge.appendChild(strip);
+        hinge = strip;
+        const curl = (direction > 0 ? 1 : -1) * 28 * 2 * index / (stripCount * (stripCount - 1));
+        bending.push(strip.animate(Array.from({ length: 9 }, (_, sample) => ({
+          offset: sample / 8,
+          transform: `rotateY(${Math.sin(Math.PI * sample / 8) * curl}deg)`
+        })), timing));
+      }
+      book.append(stationary, leaf);
+      container.appendChild(book);
+      outgoing.style.visibility = 'hidden';
+      const animation = leaf.animate([
+        { transform: 'rotateY(0deg)' }, { transform: `rotateY(${direction > 0 ? -180 : 180}deg)` }
+      ], timing);
+      const start = document.timeline.currentTime;
+      if (start !== null) [animation, ...bending].forEach((motion) => { motion.startTime = start; });
+      const finish = () => {
+        book.remove();
+        bending.forEach((motion) => motion.cancel());
+        reduceMotion.removeEventListener('change', cancel);
+        if (desktopPageTurns.get(container)?.book === book) desktopPageTurns.delete(container);
+      };
+      const cancel = () => { animation.cancel(); finish(); };
+      desktopPageTurns.set(container, { book, cancel });
+      reduceMotion.addEventListener('change', cancel, { once: true });
+      return animation.finished.then(finish, finish);
+    }
     const oDaysProject = document.querySelector('[data-display-type="O Days|Volunteer|Merchandise"]');
     const godFootballProject = document.querySelector('[data-display-type="God I Love|Football|"]');
     const nightJourneysProject = document.querySelector('[data-display-type="Night|Journeys|"]');
@@ -61,6 +320,16 @@
 
     function quickViewImages(project) {
       return project.dataset.quickView ? project.dataset.quickView.split('|') : [];
+    }
+
+    function desktopPreviewImages(images) {
+      const groupedSpreads = [2, 5, 7, 9, 10].map((number) => images.find((source) =>
+        new RegExp(`GODILOVEFOOTBALL_${number}(?:\\.preview)?\\.webp$`).test(source)));
+      if (!groupedSpreads.every(Boolean)) return images;
+      return images.flatMap((source) => {
+        if (source === groupedSpreads[0]) return groupedSpreads;
+        return groupedSpreads.includes(source) ? [] : [source];
+      });
     }
 
     if (oDaysProject) {
@@ -216,10 +485,10 @@
         else target.pause();
       });
     }, { threshold: 0.1 });
-    function createPreviewVideo(source, name, { eager = false } = {}) {
-      const video = document.createElement('video');
+    function createPreviewVideo(source, name, { eager = false, prepared = null } = {}) {
+      const video = prepared || document.createElement('video');
       video.dataset.previewSource = source;
-      if (eager) video.src = source;
+      if (eager && video.getAttribute('src') !== source) video.src = source;
       video.muted = true;
       video.defaultMuted = true;
       video.volume = 0;
@@ -231,6 +500,100 @@
       video.setAttribute('aria-label', `${name} video preview`);
       previewVideoObserver.observe(video);
       return video;
+    }
+    function autoplaySelectedFrame(container, counter, move, cancelPending) {
+      counter.setAttribute('aria-live', 'off');
+      let autoplayTimer = null;
+      let idleTimer = null;
+      const pauseAutoplay = () => {
+        window.clearInterval(autoplayTimer);
+        window.clearTimeout(idleTimer);
+        cancelPending();
+      };
+      const advanceAutoplay = () => {
+        if (document.hidden || document.body.classList.contains('list-view') || mobileViewport.matches
+          || document.documentElement.classList.contains('desktop-opening-active')) return;
+        const bounds = container.getBoundingClientRect();
+        if (bounds.width > 0 && bounds.bottom > 0 && bounds.top < window.innerHeight) move(1);
+      };
+      const resumeAutoplay = () => {
+        window.clearInterval(autoplayTimer);
+        window.clearTimeout(idleTimer);
+        autoplayTimer = window.setInterval(advanceAutoplay, 2000);
+      };
+      const pauseUntilIdle = () => {
+        pauseAutoplay();
+        idleTimer = window.setTimeout(() => {
+          advanceAutoplay();
+          resumeAutoplay();
+        }, 2000);
+      };
+      container.addEventListener('pointerenter', pauseUntilIdle);
+      container.addEventListener('pointermove', pauseUntilIdle);
+      container.addEventListener('click', pauseUntilIdle);
+      container.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') pauseUntilIdle();
+      });
+      container.addEventListener('pointerleave', resumeAutoplay);
+      resumeAutoplay();
+      window.addEventListener('portfolio:desktop-opening-finished', resumeAutoplay);
+    }
+    function mountComperiPanels(cover, slideshow) {
+      cover.classList.add('comperi-split-frame');
+      cover.setAttribute('aria-label', slideshow.name);
+      [slideshow.images.slice(0, 2), slideshow.images.slice(2)].forEach((sources, panelIndex) => {
+        const panel = document.createElement('div');
+        panel.className = 'comperi-split-panel';
+        panel.tabIndex = 0;
+        panel.dataset.cursorDirection = 'next';
+        panel.setAttribute('aria-label', `${slideshow.name}, ${panelIndex ? 'lower' : 'upper'} slideshow`);
+        let index = 0;
+        let request = 0;
+        let current = new Image();
+        const counter = document.createElement('span');
+        counter.className = 'spatial-project-counter';
+        const update = () => {
+          current.alt = `${slideshow.name}, image ${panelIndex * 2 + index + 1}`;
+          counter.textContent = `[ ${index + 1} / ${sources.length} ]`;
+        };
+        current.src = sources[0];
+        current.draggable = false;
+        panel.append(current, counter);
+        const move = async (direction) => {
+          const nextIndex = (index + direction + sources.length) % sources.length;
+          const id = ++request;
+          const next = new Image();
+          next.src = sources[nextIndex];
+          next.draggable = false;
+          try { await next.decode(); } catch { return; }
+          if (id !== request) return;
+          const previous = current;
+          panel.querySelectorAll('.spatial-project-outgoing').forEach((image) => image.remove());
+          current = next;
+          index = nextIndex;
+          panel.insertBefore(next, counter);
+          update();
+          if (reduceMotion.matches) { previous.remove(); return; }
+          previous.classList.add('spatial-project-outgoing');
+          previous.setAttribute('aria-hidden', 'true');
+          animateDesktopWheel(panel, next, previous, direction)
+            .then(() => previous.remove(), () => previous.remove());
+        };
+        autoplaySelectedFrame(panel, counter, move, () => { request++; });
+        const directionAt = (event) => event.clientX < panel.getBoundingClientRect().left + panel.clientWidth / 2 ? -1 : 1;
+        panel.addEventListener('pointermove', (event) => {
+          panel.dataset.cursorDirection = directionAt(event) < 0 ? 'previous' : 'next';
+        });
+        panel.addEventListener('click', (event) => { event.stopPropagation(); move(directionAt(event)); });
+        panel.addEventListener('keydown', (event) => {
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          move(event.key === 'ArrowLeft' ? -1 : 1);
+        });
+        update();
+        cover.appendChild(panel);
+      });
     }
     function mountVideoSlides(container, firstVideo, videoSource, stillImages, name) {
       const sources = [videoSource, ...stillImages];
@@ -286,12 +649,12 @@
         previous.classList.add('spatial-project-outgoing');
         previous.setAttribute('aria-hidden', 'true');
         container.insertBefore(previous, next.nextSibling);
-        const distance = container.getBoundingClientRect().width;
-        const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
-        next.animate([{ transform: `translateX(${direction * distance}px)` }, { transform: 'translateX(0)' }], timing);
-        previous.animate([{ transform: 'translateX(0)' }, { transform: `translateX(${-direction * distance}px)` }],
-          { ...timing, fill: 'forwards' }).finished.then(() => previous.remove(), () => previous.remove());
+        animateDesktopWheel(container, next, previous, direction)
+          .then(() => previous.remove(), () => previous.remove());
       };
+      if (container.classList.contains('spatial-project-cover')) {
+        autoplaySelectedFrame(container, counter, move, () => { loadId++; });
+      }
       const directionAt = (event) => {
         const bounds = container.getBoundingClientRect();
         return event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
@@ -563,6 +926,17 @@
       return index < 0 ? openingProjects.length : index;
     };
     spatialCovers.sort((a, b) => openingRank(a) - openingRank(b));
+    // Keep The Gram in the right-hand cell of its existing pair.
+    const gramIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'The Gram|As Personal Branding|');
+    const internetIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'The|Internet|Is Dying');
+    if (gramIndex >= 0 && internetIndex === gramIndex + 1) {
+      [spatialCovers[gramIndex], spatialCovers[internetIndex]] = [spatialCovers[internetIndex], spatialCovers[gramIndex]];
+    }
+    const queerNoirIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'Queer|Noir|');
+    const allezAllezIndex = spatialCovers.findIndex((item) => item.dataset.displayType === 'AllezAllez||');
+    if (queerNoirIndex >= 0 && allezAllezIndex >= 0) {
+      [spatialCovers[queerNoirIndex], spatialCovers[allezAllezIndex]] = [spatialCovers[allezAllezIndex], spatialCovers[queerNoirIndex]];
+    }
     let spatialCoverIndex = 0;
     let spatialRowIndex = 0;
     const containedCoverStart = spatialCovers.findIndex((item) => item.dataset.displayType === 'Houndstooth||');
@@ -584,10 +958,40 @@
         cover.style.setProperty('--project-columns', span);
         cover.dataset.displayType = sourceItem.dataset.displayType;
         const slideshowIndex = Number(sourceItem.dataset.slideshowIndex);
-        const frameSlideshow = mobileSlideshows[slideshowIndex];
+        const originalSlideshow = mobileSlideshows[slideshowIndex];
+        const frameSlideshow = { ...originalSlideshow, images: desktopPreviewImages(originalSlideshow.images) };
+        if (cover.dataset.displayType === 'Queer|Noir|') {
+          cover.classList.add('queer-noir-pair');
+          cover.setAttribute('role', 'group');
+          cover.setAttribute('aria-label', frameSlideshow.name);
+          frameSlideshow.images.forEach((source, index) => {
+            const image = new Image();
+            image.src = source;
+            image.alt = `${frameSlideshow.name}, poster ${index + 1}`;
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            image.draggable = false;
+            cover.appendChild(image);
+          });
+          const caption = document.createElement('span');
+          caption.className = 'spatial-project-caption';
+          caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
+          cover.appendChild(caption);
+          row.appendChild(cover);
+          return;
+        }
+        if (cover.dataset.displayType === 'The Values|As A Miracle|Photosynthesis') {
+          mountComperiPanels(cover, frameSlideshow);
+          const caption = document.createElement('span');
+          caption.className = 'spatial-project-caption';
+          caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
+          cover.appendChild(caption);
+          row.appendChild(cover);
+          return;
+        }
         const useContainedImage = cover.dataset.displayType === 'Night|Journeys|'
           || (containedCoverStart >= 0 && spatialCoverIndex - 1 >= containedCoverStart
-            && cover.dataset.displayType !== 'A Pattern|Language|');
+            && !['A Pattern|Language|', 'Houndstooth||', 'God I Love|Football|', 'Second|Edition|', 'First Things|First *(2026)', 'The|Internet|Is Dying', 'The Gram|As Personal Branding|'].includes(cover.dataset.displayType));
         cover.classList.toggle('spatial-project-contained', useContainedImage && (!frameSlideshow.video || frameSlideshow.images.length > 0));
         let frameImageIndex = Number(sourceItem.dataset.slideshowImageIndex) || 0;
         cover.setAttribute('role', 'group');
@@ -612,9 +1016,6 @@
           mountVideoSlides(cover, image, frameSlideshow.video, frameSlideshow.images, frameSlideshow.name);
         }
         if (!frameSlideshow.video && frameSlideshow.images.length > 1) {
-          const isNightJourneys = cover.dataset.displayType === 'Night|Journeys|';
-          const isODays = cover.dataset.displayType === 'O Days|Volunteer|Merchandise';
-          const hasAutoplay = isNightJourneys || isODays;
           const frameDirection = (event) => {
             const bounds = cover.getBoundingClientRect();
             return event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
@@ -661,55 +1062,13 @@
             image.alt = `${frameSlideshow.name}, image ${frameImageIndex + 1} of ${frameSlideshow.images.length}`;
             updateCounter();
             if (outgoing) {
-              const distance = cover.getBoundingClientRect().width;
-              const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
-              image.animate([
-                { transform: `translateX(${direction * distance}px)` },
-                { transform: 'translateX(0)' }
-              ], timing);
-              outgoing.animate([
-                { transform: 'translateX(0)' },
-                { transform: `translateX(${-direction * distance}px)` }
-              ], { ...timing, fill: 'forwards' }).finished.then(() => outgoing.remove(), () => outgoing.remove());
+              animateDesktopWheel(cover, image, outgoing, direction, 'X', {
+                width: preload.naturalWidth, height: preload.naturalHeight
+              })
+                .then(() => outgoing.remove(), () => outgoing.remove());
             }
           };
-          if (hasAutoplay) {
-            counter.setAttribute('aria-live', 'off');
-            let autoplayTimer = null;
-            let idleTimer = null;
-            const pauseAutoplay = () => {
-              window.clearInterval(autoplayTimer);
-              window.clearTimeout(idleTimer);
-              autoplayTimer = null;
-              // Cancel an automatic image that is still loading.
-              frameLoadId++;
-            };
-            const advanceAutoplay = () => {
-              if (document.hidden || document.body.classList.contains('list-view') || mobileViewport.matches) return;
-              const bounds = cover.getBoundingClientRect();
-              if (bounds.bottom > 0 && bounds.top < window.innerHeight) moveFrame(1);
-            };
-            const resumeAutoplay = () => {
-              window.clearInterval(autoplayTimer);
-              window.clearTimeout(idleTimer);
-              autoplayTimer = window.setInterval(advanceAutoplay, 2000);
-            };
-            const pauseUntilIdle = () => {
-              pauseAutoplay();
-              idleTimer = window.setTimeout(() => {
-                advanceAutoplay();
-                resumeAutoplay();
-              }, 2000);
-            };
-            cover.addEventListener('pointerenter', pauseUntilIdle);
-            cover.addEventListener('pointermove', pauseUntilIdle);
-            cover.addEventListener('click', pauseUntilIdle);
-            cover.addEventListener('keydown', (event) => {
-              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') pauseUntilIdle();
-            });
-            cover.addEventListener('pointerleave', resumeAutoplay);
-            resumeAutoplay();
-          }
+          autoplaySelectedFrame(cover, counter, moveFrame, () => { frameLoadId++; });
           cover.addEventListener('click', (event) => {
             moveFrame(frameDirection(event));
           });
@@ -734,7 +1093,11 @@
         divider.setAttribute('aria-label', 'Resize project frames');
         divider.setAttribute('aria-valuemin', '20');
         divider.setAttribute('aria-valuemax', '80');
-        let split = spans[0] * 25;
+        const coordPosition = [...row.querySelectorAll('.spatial-project-cover')]
+          .findIndex((cover) => cover.dataset.displayType === 'Second|Edition|');
+        const hasGramOnRight = row.querySelectorAll('.spatial-project-cover')[1]?.dataset.displayType === 'The Gram|As Personal Branding|';
+        let split = hasGramOnRight ? 200 / 3
+          : coordPosition === 0 ? 100 / 3 : coordPosition === 1 ? 200 / 3 : spans[0] * 25;
         const setSplit = (value) => {
           split = Math.max(20, Math.min(80, value));
           row.style.setProperty('--frame-split', `${split}%`);
@@ -792,9 +1155,8 @@
         ...slideshow,
         displayType,
         caption: item.querySelector('figcaption'),
-        contained: displayType === 'Night|Journeys|'
-          || (containedCoverStart >= 0 && index >= containedCoverStart && displayType !== 'A Pattern|Language|'),
-        autoplay: displayType === 'Night|Journeys|' || displayType === 'O Days|Volunteer|Merchandise'
+        contained: displayType === 'Night|Journeys|',
+        autoplay: true
       };
     }), {
       viewport: mobileViewport,
@@ -987,10 +1349,11 @@
     function scheduleAllAutoplay() {
       window.clearTimeout(allAutoplayTimer);
       allAutoplayTimer = null;
-      if (allPreviewHovered || document.hidden || !document.body.classList.contains('list-view')
+      if (allPreviewHovered || document.hidden || document.documentElement.classList.contains('desktop-opening-active') || !document.body.classList.contains('list-view')
         || allPreviewImages.length < 2) return;
       allAutoplayTimer = window.setTimeout(() => moveAllPreview(1, { automatic: true }), 2000);
     }
+    window.addEventListener('portfolio:desktop-opening-finished', scheduleAllAutoplay);
 
     allPreview.addEventListener('pointerenter', (event) => {
       if (event.pointerType === 'touch') return;
@@ -1241,21 +1604,14 @@
       });
       allPreviewMedia.replaceChildren(media);
       if (!reduceMotion.matches) {
-        const timing = { duration: 550, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
         const axis = motion === 'horizontal' ? 'X' : 'Y';
-        media.animate([
-          { transform: `translate${axis}(${direction > 0 ? '100%' : '-100%'})`, opacity: 1 },
-          { transform: `translate${axis}(0)`, opacity: 1 }
-        ], timing);
         if (outgoing) {
           outgoing.classList.add('all-preview-outgoing');
           outgoing.setAttribute('aria-hidden', 'true');
           allPreviewMedia.appendChild(outgoing);
-          outgoing.animate([
-            { transform: `translate${axis}(0)` },
-            { transform: `translate${axis}(${direction > 0 ? '-100%' : '100%'})` }
-          ], { ...timing, fill: 'forwards' }).finished.then(() => outgoing.remove(), () => outgoing.remove());
         }
+        animateDesktopWheel(allPreviewMedia, media, outgoing, direction > 0 ? 1 : -1, axis)
+          .then(() => outgoing?.remove(), () => outgoing?.remove());
       }
       if (count > 1) {
         const counter = document.createElement('span');
@@ -1268,6 +1624,7 @@
     }
 
     function showAllPreview(source, force = false) {
+      if (document.documentElement.classList.contains('desktop-opening-active')) return;
       if (!document.body.classList.contains('list-view') || (!force && activeAllSource === source)) return;
       const project = source.closest('.project');
       if (!project) return;
@@ -1285,6 +1642,7 @@
           .map((image) => image.getAttribute('src')).filter(Boolean);
       }
       if (source.dataset.previewVideo) allPreviewImages.unshift(source.dataset.previewVideo);
+      if (!mobileViewport.matches) allPreviewImages = desktopPreviewImages(allPreviewImages);
       const cells = project.querySelectorAll(':scope > .list-row > span');
       const previewName = source === project
         ? cells[1]?.textContent.trim() || 'Project'
@@ -1985,6 +2343,9 @@
       : savedView === 'list' ? 'list' : 'spatial';
     if (initialView === 'spatial' && mobileViewport.matches && nightJourneysProject) {
       spatialScrollPosition = nightJourneysProject.offsetTop;
+    }
+    if (initialView === 'spatial' && document.documentElement.dataset.selectedReload === 'true') {
+      spatialScrollPosition = 0;
     }
     setView(initialView);
 

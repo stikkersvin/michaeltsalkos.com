@@ -1,3 +1,20 @@
+// Shared wheel geometry for desktop transitions and phone gestures.
+window.portfolioWheelTransform = function (position, distance, axis = 'Y') {
+  const step = 40 * Math.PI / 180;
+  const radius = distance / (2 * Math.tan(step / 2));
+  const angle = Math.max(-84 * Math.PI / 180, Math.min(84 * Math.PI / 180, position * step));
+  const shift = radius * Math.sin(angle);
+  const depth = radius * (Math.cos(angle) - 1);
+  return axis === 'X'
+    ? `translate3d(${shift}px, 0, ${depth}px) rotateY(${angle}rad)`
+    : `translate3d(0, ${shift}px, ${depth}px) rotateX(${-angle}rad)`;
+};
+window.portfolioWheelKeyframes = function (from, to, distance, axis = 'Y') {
+  return Array.from({ length: 17 }, (_, index) => ({
+    transform: window.portfolioWheelTransform(from + (to - from) * index / 16, distance, axis)
+  }));
+};
+
 // Phone-only Selected view: a project rail and one active media frame.
 window.createMobileSelected = function (entries, { viewport, reduceMotion, createVideo, stopVideo }) {
   const root = document.createElement('section');
@@ -8,7 +25,6 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       <div class="mobile-selected-media"></div>
       <div class="mobile-selected-caption"></div>
       <span class="mobile-selected-image-count"></span>
-      <button class="mobile-selected-next" type="button" aria-label="Next project">⌄</button>
     </div>
     <span class="mobile-selected-project-count" aria-live="polite"></span>`;
   document.body.appendChild(root);
@@ -33,9 +49,14 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   let dragDirection = 0;
   let dragAxis = null;
   let dragOffset = 0;
+  let dragVisualOffset = 0;
   let dragSettle = null;
+  let dragReturnAnimations = [];
   const videoBackdrops = new WeakMap();
   const buttons = [];
+  const preparedMedia = new Map();
+  const mediaKey = (project, image) => `${project}:${image}`;
+  const isVideoSource = (source) => /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
   const footballImageNumber = (source) => Number(/GODILOVEFOOTBALL_(\d+)(?:\.preview)?\.(?:webp|jpe?g|png)(?:\?|$)/i.exec(source)?.[1]);
   const sourcesFor = (entry) => {
     // The lower images belong to their paired frame rather than separate slides.
@@ -75,8 +96,76 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     pair.append(image, lowerImage);
     return pair;
   }
+  function prepareMedia(project, image) {
+    const key = mediaKey(project, image);
+    if (preparedMedia.has(key)) return preparedMedia.get(key);
+    const entry = entries[project];
+    const source = sourcesFor(entry)[image];
+    const video = isVideoSource(source);
+    const media = video ? document.createElement('video') : new Image();
+    const record = { media, source, video, ready: false, disposed: false };
+    preparedMedia.set(key, record);
+    if (video) {
+      media.muted = true;
+      media.defaultMuted = true;
+      media.volume = 0;
+      media.playsInline = true;
+      media.loop = true;
+      media.preload = 'auto';
+      if (entry.images[0]) media.poster = entry.images[0];
+      record.promise = new Promise((resolve) => {
+        record.cancel = () => resolve(false);
+        media.addEventListener('loadeddata', () => {
+          record.ready = !record.disposed;
+          resolve(record.ready);
+        }, { once: true });
+        media.addEventListener('error', () => resolve(false), { once: true });
+        media.src = source;
+        media.load();
+      });
+    } else {
+      media.alt = `${entry.name}, image ${image + 1} of ${sourcesFor(entry).length}`;
+      media.decoding = 'async';
+      media.draggable = false;
+      media.src = source;
+      const lowerSource = lowerStillSource(entry, source);
+      if (lowerSource) record.media = createStillPair(media, entry, lowerSource);
+      const images = lowerSource ? [...record.media.children] : [media];
+      record.promise = Promise.all(images.map((item) => item.decode())).then(() => {
+        record.ready = !record.disposed;
+        return record.ready;
+      }, () => false);
+    }
+    return record;
+  }
+  function discardPrepared(record) {
+    record.disposed = true;
+    record.cancel?.();
+    record.media.remove();
+    if (record.video) {
+      record.media.pause();
+      record.media.removeAttribute('src');
+      record.media.load();
+    }
+  }
+  function preloadNeighbours(project, image) {
+    if (!viewport.matches) return;
+    const count = sourcesFor(entries[project]).length;
+    const neighbours = [
+      [project, (image + 1) % count], [project, (image - 1 + count) % count],
+      [(project + 1) % entries.length, 0], [(project - 1 + entries.length) % entries.length, 0]
+    ];
+    const currentKey = mediaKey(project, image);
+    const keep = new Set([currentKey, ...neighbours.map(([p, i]) => mediaKey(p, i))]);
+    preparedMedia.forEach((record, key) => {
+      if (!keep.has(key)) { discardPrepared(record); preparedMedia.delete(key); }
+    });
+    neighbours.forEach(([p, i]) => {
+      if (mediaKey(p, i) !== currentKey) prepareMedia(p, i);
+    });
+  }
   function addVideoBackdrop(video, entry) {
-    if (entry.displayType !== 'Du minder|mig om|' || video.tagName !== 'VIDEO') return null;
+    if (!entry.contained || entry.displayType !== 'Du minder|mig om|' || video.tagName !== 'VIDEO') return null;
     video.classList.add('mobile-selected-havtorn-video');
     const canvas = document.createElement('canvas');
     canvas.className = 'mobile-selected-video-backdrop';
@@ -111,54 +200,80 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   function resetDrag() {
     dragSettle?.cancel();
     dragSettle = null;
+    dragReturnAnimations.forEach((animation) => animation.cancel());
+    dragReturnAnimations = [];
     dragPreview?.querySelectorAll('video').forEach(stopVideo);
     dragPreview?.remove();
     dragPreview = null;
     dragDirection = 0;
     dragAxis = null;
     dragOffset = 0;
+    dragVisualOffset = 0;
     mediaFrame.style.transform = '';
+    mediaFrame.style.perspective = '';
+    if (currentMedia) {
+      currentMedia.style.transform = '';
+      const canvas = videoBackdrops.get(currentMedia)?.canvas;
+      if (canvas) canvas.style.transform = '';
+    }
     mediaFrame.classList.remove('is-dragging');
   }
+  const wheelTransform = window.portfolioWheelTransform;
+  const wheelKeyframes = window.portfolioWheelKeyframes;
   function previewDrag(axis, offset, distance) {
     const direction = offset < 0 ? 1 : -1;
     if (!dragPreview || direction !== dragDirection || axis !== dragAxis) {
-      resetDrag();
+      if (direction !== dragDirection || axis !== dragAxis) resetDrag();
       dragDirection = direction;
       dragAxis = axis;
-      const entry = entries[axis === 'Y' ? (projectIndex + direction + entries.length) % entries.length : projectIndex];
+      dragOffset = offset;
+      const targetProject = axis === 'Y' ? (projectIndex + direction + entries.length) % entries.length : projectIndex;
+      const entry = entries[targetProject];
       const sources = sourcesFor(entry);
       const nextImage = axis === 'Y' ? 0 : (imageIndex + direction + sources.length) % sources.length;
-      const source = sources[nextImage];
-      const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
-      // Use the supplied still as a video poster during the drag when possible.
-      let preview = isVideo && !entry.images[0]
-        ? createVideo(source, entry.name, { eager: true }) : new Image();
-      if (preview.tagName === 'IMG') {
-        preview.src = isVideo ? entry.images[0] : source;
-        preview.alt = '';
-        preview.draggable = false;
+      const prepared = prepareMedia(targetProject, nextImage);
+      if (!prepared.ready) {
+        // Keep the current face in place until the incoming face has pixels.
+        prepared.promise.then((ready) => {
+          if (ready && touchStart && dragAxis === axis && dragDirection === direction && !dragPreview) {
+            previewDrag(axis, dragOffset, distance);
+          }
+        });
+        return;
       }
-      const lowerSource = !isVideo && lowerStillSource(entry, source);
-      if (lowerSource) preview = createStillPair(preview, entry, lowerSource);
       dragPreview = document.createElement('div');
       dragPreview.className = 'mobile-selected-drag-preview';
       dragPreview.classList.toggle('is-contained', entry.contained);
       dragPreview.dataset.displayType = entry.displayType;
       dragPreview.setAttribute('aria-hidden', 'true');
       dragPreview.style.transform = `translate${axis}(${direction * distance}px)`;
-      dragPreview.appendChild(preview);
+      dragPreview.appendChild(prepared.media);
       mediaFrame.appendChild(dragPreview);
     }
     dragOffset = offset;
+    dragVisualOffset = offset;
     mediaFrame.classList.add('is-dragging');
-    mediaFrame.style.transform = `translate${axis}(${offset}px)`;
+    if (!reduceMotion.matches) {
+      const position = offset / distance;
+      mediaFrame.style.perspective = `${distance * 1.5}px`;
+      currentMedia.style.transform = wheelTransform(position, distance, axis);
+      const canvas = videoBackdrops.get(currentMedia)?.canvas;
+      if (canvas) canvas.style.transform = wheelTransform(position, distance, axis);
+      dragPreview.style.transform = wheelTransform(direction + position, distance, axis);
+    } else mediaFrame.style.transform = `translate${axis}(${offset}px)`;
   }
   function returnFromDrag() {
-    if (!dragAxis || reduceMotion.matches) { resetDrag(); scheduleAutoplay(); return; }
-    const animation = mediaFrame.animate([
-      { transform: `translate${dragAxis}(${dragOffset}px)` }, { transform: 'translate(0)' }
-    ], { duration: 250, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    if (!dragAxis || !dragPreview || reduceMotion.matches) { resetDrag(); scheduleAutoplay(); return; }
+    const timing = { duration: 440, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)', fill: 'both' };
+    const distance = dragAxis === 'X' ? mediaFrame.clientWidth : mediaFrame.clientHeight;
+    const position = dragOffset / distance;
+    const frames = wheelKeyframes(position, 0, distance, dragAxis);
+    const animation = currentMedia.animate(frames, timing);
+    const canvas = videoBackdrops.get(currentMedia)?.canvas;
+    dragReturnAnimations = [animation,
+      canvas?.animate(frames, timing),
+      dragPreview?.animate(wheelKeyframes(dragDirection + position, dragDirection, distance, dragAxis), timing)
+    ].filter(Boolean);
     dragSettle = animation;
     animation.finished.then(() => {
       if (dragSettle === animation) { resetDrag(); scheduleAutoplay(); }
@@ -170,7 +285,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       || sourcesFor(entries[projectIndex]).length < 2) return;
     autoplayTimer = window.setTimeout(() => moveImage(1), 2000);
   }
-  async function render(nextProject, nextImage = 0, axis = 'Y', direction = 1, fromOffset = null) {
+  async function render(nextProject, nextImage = 0, axis = 'Y', direction = 1, fromOffset = null, releaseSpeed = 0) {
     if (!viewport.matches || !entries.length) return;
     pauseAutoplay();
     if (fromOffset === null) resetDrag();
@@ -178,33 +293,18 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     const entry = entries[nextProject];
     const sources = sourcesFor(entry);
     const source = sources[nextImage];
-    const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
-    let next = isVideo ? createVideo(source, entry.name, { eager: true }) : new Image();
+    const prepared = prepareMedia(nextProject, nextImage);
+    const isVideo = prepared.video;
+    let next = prepared.media;
+    if (!currentMedia) preloadNeighbours(nextProject, nextImage);
     error = false;
     stage.setAttribute('aria-busy', 'true');
     try {
-      if (isVideo) {
-        if (entry.images[0]) next.poster = entry.images[0];
-        await new Promise((resolve, reject) => {
-          next.addEventListener('loadeddata', resolve, { once: true });
-          next.addEventListener('error', reject, { once: true });
-          next.load();
-        });
-      } else {
-        next.alt = `${entry.name}, image ${nextImage + 1} of ${sources.length}`;
-        next.decoding = 'async';
-        next.draggable = false;
-        next.src = source;
-        await next.decode();
-        const lowerSource = lowerStillSource(entry, source);
-        if (lowerSource) {
-          next = createStillPair(next, entry, lowerSource);
-          await Promise.all([...next.children].map((image) => image.decode()));
-        }
-      }
+      if (!await prepared.promise) throw new Error('Preview unavailable');
     } catch {
-      retire(next);
       if (request !== loadId) return;
+      discardPrepared(prepared);
+      preparedMedia.delete(mediaKey(nextProject, nextImage));
       error = true;
       returnFromDrag();
       stage.setAttribute('aria-busy', 'false');
@@ -212,7 +312,10 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       stage.onclick = () => { if (error) render(nextProject, nextImage, axis, direction); };
       return;
     }
-    if (request !== loadId || !viewport.matches) { retire(next); return; }
+    if (request !== loadId || !viewport.matches) return;
+    preparedMedia.delete(mediaKey(nextProject, nextImage));
+    // Move the decoded node out of the drag layer before removing that layer.
+    next.remove();
     resetDrag();
     mediaFrame.querySelectorAll('.mobile-selected-outgoing').forEach(retire);
     const previous = currentMedia;
@@ -226,9 +329,11 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     if (previous?.tagName === 'VIDEO') stopVideo(previous);
     projectIndex = nextProject;
     imageIndex = nextImage;
+    if (isVideo) next = createVideo(source, entry.name, { eager: true, prepared: next });
     currentMedia = next;
     mediaFrame.appendChild(next);
     const backdrop = addVideoBackdrop(next, entry);
+    if (isVideo) next.play().catch(() => {});
     stage.dataset.displayType = entry.displayType;
     stage.classList.toggle('is-contained', entry.contained);
     caption.replaceChildren(...entry.caption.cloneNode(true).childNodes);
@@ -241,17 +346,23 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       previous.classList.add('mobile-selected-outgoing');
       previous.setAttribute('aria-hidden', 'true');
       const distance = axis === 'X' ? mediaFrame.clientWidth : mediaFrame.clientHeight;
+      mediaFrame.style.perspective = `${distance * 1.5}px`;
       const offset = fromOffset || 0;
-      const duration = fromOffset === null ? 550 : Math.max(180, 450 * (1 - Math.abs(offset) / distance));
-      const timing = { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' };
-      const incomingFrames = [{ transform: `translate${axis}(${direction * distance + offset}px)` }, { transform: 'translate(0)' }];
-      const outgoingFrames = [{ transform: `translate${axis}(${offset}px)` }, { transform: `translate${axis}(${-direction * distance}px)` }];
+      const remaining = Math.max(1, distance - Math.abs(offset));
+      const duration = fromOffset === null ? 800 : Math.max(420, Math.min(900, remaining / (0.5 + releaseSpeed * 0.45)));
+      // Match the finger's release speed, then gradually coast to a stop.
+      const initialSlope = Math.max(0.08, Math.min(0.85, releaseSpeed * duration / remaining * 0.25));
+      const easing = fromOffset === null ? 'cubic-bezier(0.22, 0.75, 0.25, 1)' : `cubic-bezier(0.25, ${initialSlope}, 0.32, 1)`;
+      const timing = { duration, easing };
+      const incomingFrames = wheelKeyframes(direction + offset / distance, 0, distance, axis);
+      const outgoingFrames = wheelKeyframes(offset / distance, -direction, distance, axis);
       next.animate(incomingFrames, timing);
       backdrop?.animate(incomingFrames, timing);
       videoBackdrops.get(previous)?.canvas.animate(outgoingFrames, { ...timing, fill: 'forwards' });
       previous.animate(outgoingFrames,
         { ...timing, fill: 'forwards' }).finished.then(() => retire(previous), () => retire(previous));
     } else retire(previous);
+    preloadNeighbours(projectIndex, imageIndex);
     scheduleAutoplay();
   }
   function finishOpening() {
@@ -353,8 +464,6 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     const height = stage.clientHeight;
     run.width = stage.clientWidth;
     run.height = height;
-    const angleStep = 40 * Math.PI / 180;
-    const radius = height / (2 * Math.tan(angleStep / 2));
     track.style.setProperty('--opening-perspective', `${height * 1.5}px`);
     run.frameAnimations = [...track.children].map((frame, index) => {
       const positions = new Set([0, steps]);
@@ -364,12 +473,9 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       }
       const keyframes = [...positions].sort((a, b) => a - b).map((position) => {
         const distance = index - position;
-        const angle = Math.max(-84 * Math.PI / 180, Math.min(84 * Math.PI / 180, distance * angleStep));
-        const y = radius * Math.sin(angle);
-        const z = radius * (Math.cos(angle) - 1);
         return {
           offset: position / steps,
-          transform: `translate3d(0, ${y}px, ${z}px) rotateX(${-angle}rad)`,
+          transform: wheelTransform(distance, height),
           opacity: Math.min(1, Math.max(0, (3 - Math.abs(distance)) * 2))
         };
       });
@@ -454,7 +560,8 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     videoBackdrops.get(currentMedia)?.canvas.getAnimations().forEach((animation) => animation.cancel());
     touchStart = {
       x: event.clientX, y: event.clientY, id: event.pointerId, time: performance.now(), axis: null,
-      width: mediaFrame.clientWidth, height: mediaFrame.clientHeight
+      width: mediaFrame.clientWidth, height: mediaFrame.clientHeight,
+      samples: [{ x: event.clientX, y: event.clientY, time: performance.now() }]
     };
     stage.setPointerCapture(event.pointerId);
   });
@@ -462,6 +569,9 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     if (!touchStart || event.pointerId !== touchStart.id) return;
     const dx = event.clientX - touchStart.x;
     const dy = event.clientY - touchStart.y;
+    const now = performance.now();
+    touchStart.samples.push({ x: event.clientX, y: event.clientY, time: now });
+    touchStart.samples = touchStart.samples.filter((sample) => now - sample.time <= 100);
     if (!touchStart.axis) {
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
       touchStart.axis = Math.abs(dx) > Math.abs(dy) ? 'X' : 'Y';
@@ -483,13 +593,17 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       const axis = dragAxis;
       const offset = dragOffset;
       const distance = axis === 'X' ? gesture.width : gesture.height;
-      const speed = Math.abs(offset) / Math.max(1, performance.now() - gesture.time);
+      const now = performance.now();
+      const recent = gesture.samples.find((sample) => now - sample.time <= 100);
+      const speed = recent
+        ? Math.abs((axis === 'X' ? event.clientX - recent.x : event.clientY - recent.y) / Math.max(1, now - recent.time))
+        : 0;
       if (Math.abs(offset) > Math.min(120, distance * 0.2) || (Math.abs(offset) > 24 && speed > 0.45)) {
         const direction = offset < 0 ? 1 : -1;
         const nextProject = axis === 'Y' ? (projectIndex + direction + entries.length) % entries.length : projectIndex;
         const count = sourcesFor(entries[nextProject]).length;
         const nextImage = axis === 'Y' ? 0 : (imageIndex + direction + count) % count;
-        render(nextProject, nextImage, axis, direction, offset);
+        render(nextProject, nextImage, axis, direction, dragVisualOffset, speed);
       } else returnFromDrag();
     } else if (Math.max(Math.abs(dx), Math.abs(dy)) > 8) {
       suppressClickUntil = performance.now() + 500;
@@ -509,7 +623,6 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') moveImage(event.key === 'ArrowLeft' ? -1 : 1);
     else selectProject(projectIndex + (event.key === 'ArrowUp' ? -1 : 1));
   });
-  root.querySelector('.mobile-selected-next').addEventListener('click', () => selectProject(projectIndex + 1));
   function syncViewport() {
     if (viewport.matches) {
       mountRail();
@@ -529,6 +642,8 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       loadId++;
       [...mediaFrame.children].forEach(retire);
       currentMedia = null;
+      preparedMedia.forEach(discardPrepared);
+      preparedMedia.clear();
     }
   }
   viewport.addEventListener('change', syncViewport);

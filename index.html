@@ -6,15 +6,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <script>
     let mobileOpeningSeen = false;
+    let desktopOpeningSeen = false;
     try {
       if (performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+        const requestedView = new URLSearchParams(location.search).get('view');
+        const selectedView = matchMedia('(max-width: 760px) and (pointer: coarse)').matches
+          || (requestedView ? requestedView !== 'list' : localStorage.getItem('graphic-project-view') !== 'list');
+        if (selectedView) {
+          history.scrollRestoration = 'manual';
+          document.documentElement.dataset.selectedReload = 'true';
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+          window.addEventListener('pageshow', (event) => {
+            if (!event.persisted) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+          }, { once: true });
+        }
+
         sessionStorage.removeItem('portfolio-mobile-opening-seen');
+        sessionStorage.removeItem('portfolio-desktop-opening-seen');
       }
       mobileOpeningSeen = sessionStorage.getItem('portfolio-mobile-opening-seen') === '1';
+      desktopOpeningSeen = sessionStorage.getItem('portfolio-desktop-opening-seen') === '1';
     } catch (error) {}
     if (matchMedia('(max-width: 760px) and (pointer: coarse)').matches
       && !matchMedia('(prefers-reduced-motion: reduce)').matches && !mobileOpeningSeen) {
       document.documentElement.classList.add('mobile-landing-pending');
+    }
+    if (!matchMedia('(max-width: 760px) and (pointer: coarse)').matches
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches && !desktopOpeningSeen) {
+      document.documentElement.classList.add('desktop-landing-pending');
     }
   </script>
   <title>Selected Graphic Works</title>
@@ -46,6 +65,10 @@
     <div class="mobile-spatial-catalogue" aria-label="Spatial project catalogue"></div>
 
     <!-- Add data-curated only when a project should also appear in Spatial view. -->
+    <a class="project" href="#" data-year-sort="202405" data-curated data-display-type="Pop Up!||" data-description="Pop Up! for Lost &amp; Found." data-quick-view="Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_1.preview.jpg|Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_2.preview.webp|Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_3.preview.webp|Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_4_5_Repeat.svg|Portfolio_QuickView/Portfolio_QuickView_LAF/Portfolio_QuickView_LAF_PopUp_6.preview.webp">
+      <span class="project-copy"><span class="year">2024 may</span><span class="title">Pop Up!<br>Window Graphics</span></span>
+      <span class="list-row"><span>2024 may</span><span>Pop Up!</span><span>Lost &amp; Found</span><span>Window Graphics</span></span>
+    </a>
     <a class="project" href="#" data-year-sort="202610" data-curated data-display-type="Du minder|mig om|" data-preview-video="Portfolio_QuickView/Portfolio_QuickView_HAVTORN/Havtorn.mp4" data-quick-view="Portfolio_QuickView/Portfolio_QuickView_HAVTORN/Havtorn_2.preview.webp" data-description="Du minder mig om, a logo for Havtorn.">
       <span class="project-copy"><span class="year">2026 oct</span><span class="title">Du minder mig om<br>Logo</span></span>
       <span class="list-row"><span>2026 oct</span><span>Du minder mig om</span><span>Havtorn</span><span>Logo</span></span>
@@ -336,10 +359,10 @@
         </span>
       </span>
     </a>
-<a class="project" href="Portfolio_GraphicDesign_Projects/Portfolio_GraphicDesign_Projects_Houndstooth/Portfolio_GraphicDesign_Projects_Houndstooth_Page.html" data-year-sort="202604" data-curated data-spatial-stack data-display-type="Houndstooth||" style="--spatial-stack-height: 180svh;" data-quick-view-below data-quick-view="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_1.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_2.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_7.preview.webp" data-list-dropdown aria-expanded="false">
+<a class="project" href="Portfolio_GraphicDesign_Projects/Portfolio_GraphicDesign_Projects_Houndstooth/Portfolio_GraphicDesign_Projects_Houndstooth_Page.html" data-year-sort="202604" data-curated data-spatial-stack data-display-type="Houndstooth||" style="--spatial-stack-height: 180svh;" data-quick-view-below data-quick-view="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_1.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_5.preview.jpg|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_7.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_8.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_9.preview.webp|Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_11.preview.webp" data-list-dropdown aria-expanded="false">
       <span class="project-copy"><span class="year" data-list-year="2026">2026</span><span class="title">Houndstooth<br>The Community and Network Issue</span></span>
   <span class="spatial-stack-images" aria-hidden="true">
-    <img class="spatial-stack-image" src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_2.preview.webp" alt="" loading="lazy" />
+    <img class="spatial-stack-image" src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_5.preview.jpg" alt="" loading="lazy" />
     <img class="spatial-stack-image" src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_7.preview.webp" alt="" loading="lazy" />
   </span>
       <span class="list-row"><span>2026 apr</span><span>The Community and Network Issue</span><span>Houndstooth Magazine</span><span>Publication</span></span>
@@ -360,7 +383,7 @@
               <img src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_3.preview.webp" alt="Houndstooth Magazine publication spread" loading="lazy" />
             </span>
             <span class="list-dropdown-houndstooth-column">
-              <img src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_2.preview.webp" alt="Houndstooth Magazine publication detail" loading="lazy" />
+              <img src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_5.preview.jpg" alt="Houndstooth Magazine publication detail" loading="lazy" />
               <img class="houndstooth-extra houndstooth-extra-8" src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_8.preview.webp" alt="Houndstooth Magazine publication spread" loading="lazy" />
               <img class="houndstooth-extra houndstooth-extra-10" src="Portfolio_QuickView/Portfolio_QuickView_HOUNDSTOOTH/Portfolio_QuickView_HOUNDSTOOTH_10.preview.webp" alt="Houndstooth Magazine publication spread" loading="lazy" />
             </span>

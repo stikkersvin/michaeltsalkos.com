@@ -42,7 +42,7 @@
     overflow: hidden;
     background: #000;
     color: #fff;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     line-height: 1.3;
   }
   .mobile-selected-rail {
@@ -152,9 +152,17 @@
   }
   .mobile-selected.is-opening .mobile-selected-caption,
   .mobile-selected.is-opening .mobile-selected-image-count,
-  .mobile-selected.is-opening .mobile-selected-project-count,
-  .mobile-selected.is-opening .mobile-selected-next { visibility: hidden; }
-  .mobile-selected-media { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; }
+  .mobile-selected.is-opening .mobile-selected-project-count { visibility: hidden; }
+  .mobile-selected-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: grid;
+    place-items: center;
+    perspective: 150dvh;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
   .mobile-selected-media.is-dragging { will-change: transform; }
   .mobile-selected-video-backdrop {
     position: absolute;
@@ -198,34 +206,11 @@
   .mobile-selected-stage img[src*="ODAYS_Instagram_6"] {
     object-position: right center;
   }
+  .mobile-selected-stage img[src*="Portfolio_QuickView_WEDDING_7_White"] {
+    background-size: cover;
+  }
   .is-contained .mobile-selected-media > img,
   .is-contained .mobile-selected-media > video { width: 80%; height: 80%; object-fit: contain; }
-  .mobile-selected-stage .mobile-selected-media > video.mobile-selected-havtorn-video {
-    width: 166.666667%;
-    height: auto;
-    max-width: none;
-    clip-path: inset(0 20%);
-  }
-
-  .mobile-selected-stage[data-display-type="AllezAllez||"] .mobile-selected-media > video {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-  }
-
-  .mobile-selected-drag-preview[data-display-type="AllezAllez||"] > video {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-  }
-
-  .mobile-selected-stage[data-display-type="Second|Edition|"] .mobile-selected-media > img,
-  .mobile-selected-drag-preview[data-display-type="Second|Edition|"] > img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
   .mobile-selected-still-pair {
     display: grid;
     grid-template-rows: minmax(0, calc(50dvh - var(--navigation-half-height, 1rem))) minmax(0, 1fr);
@@ -253,11 +238,13 @@
   .mobile-selected-caption {
     position: absolute;
     z-index: 1;
-    top: calc(50dvh + var(--navigation-half-height, 1rem) + 0.75rem);
-    left: 0.5rem;
-    right: 0.5rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    left: 4rem;
+    right: 4rem;
     text-align: center;
-    text-wrap: balance;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     mix-blend-mode: difference;
     pointer-events: none;
   }
@@ -273,26 +260,20 @@
   .mobile-selected-project-count {
     left: 0.75rem;
     right: auto;
-    bottom: calc(var(--mobile-rail-height) + 0.75rem);
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
     width: auto;
     padding: 0;
-  }
-  .mobile-selected-next {
-    position: absolute;
-    z-index: 1;
-    bottom: max(0.4rem, env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.25rem 1rem;
-    border: 0;
-    background: transparent;
-    color: #fff;
-    font: 1.75rem/1 Arial, sans-serif;
-    mix-blend-mode: difference;
   }
   body.dark .mobile-selected-stage[data-display-type="Home|Shirt|24/25"] img[src*="Portfolio_QuickView_FCKADK_4"],
   body.dark .mobile-selected-stage[data-display-type="Home|Shirt|24/25"] img[src*="Portfolio_QuickView_FCKADK_5"],
   body.dark .mobile-selected-drag-preview[data-display-type="Home|Shirt|24/25"] img[src*="Portfolio_QuickView_FCKADK_4"],
   body.dark .mobile-selected-drag-preview[data-display-type="Home|Shirt|24/25"] img[src*="Portfolio_QuickView_FCKADK_5"],
   body.dark .mobile-selected-project[data-display-type="Home|Shirt|24/25"] img { filter: invert(1); }
+}
+
+@media (max-width: 760px) and (pointer: coarse) {
+  .mobile-selected img[src*="Portfolio_QuickView_LAF_PopUp_"]:not([src$="_1.preview.jpg"]):not([src$="_4_5_Repeat.svg"]) {
+    object-fit: contain;
+    object-position: center;
+  }
 }

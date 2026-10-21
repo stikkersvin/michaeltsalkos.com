@@ -2,6 +2,28 @@ html {
   scrollbar-gutter: stable;
 }
 
+html.desktop-landing-pending .site-topbar {
+  clip-path: inset(calc(50% - 0.5px) 50%);
+}
+
+.desktop-opening-brackets {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 0;
+  color: var(--ink, #fff);
+  font: 400 1rem/1 Arial, sans-serif;
+  z-index: 10021;
+  pointer-events: none;
+}
+
+.desktop-opening-brackets span {
+  position: absolute;
+  top: 0;
+  left: 50%;
+}
+
 .site-copyright {
   display: block;
   flex-shrink: 0;
@@ -247,9 +269,10 @@ body.dark .site-topbar .topbar-knob {
     --bar-background: rgba(17, 17, 17, 0.8);
   }
   .site-topbar { font-size: clamp(7px, 2vw, 10px); }
-  .site-topbar > * { padding: 0.4rem 0.25rem; }
-  .site-topbar .topbar-links { gap: 0.25rem 0.5rem; }
+  .site-topbar > * { padding: 0.4rem 0.25rem; border-right: 0; }
+  .site-topbar .topbar-links { flex-wrap: nowrap; gap: 0.25rem 0.5rem; }
   .site-topbar .topbar-tools { gap: 0.4rem; }
+  .site-topbar .topbar-theme { border-left: 0; }
   .site-topbar .topbar-view-slot { display: block; }
   .site-topbar [data-view="list"],
   .site-topbar .topbar-view-links a[href*="view=list"] { display: none; }
