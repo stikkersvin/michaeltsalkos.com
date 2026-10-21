@@ -168,11 +168,10 @@
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', revealDesktopBar, { once: true });
     } else revealDesktopBar();
+    const isPageSpread = (source) => /(?:HOUNDSTOOTH_(?:8|9|11)|GODILOVEFOOTBALL_(?:2|5|7|9|10))(?:\.preview)?\.webp(?:\?|$)/.test(source || '');
     function animateDesktopWheel(container, incoming, outgoing, direction, axis = 'X', decodedSize = null) {
       desktopPageTurns.get(container)?.cancel();
-      const isSpread = (image) => image?.tagName === 'IMG'
-        && /(?:HOUNDSTOOTH_(?:8|9|11)|GODILOVEFOOTBALL_(?:2|5|7|9|10))(?:\.preview)?\.webp(?:\?|$)/.test(image.getAttribute('src') || '');
-      if (axis === 'X' && isSpread(incoming) && isSpread(outgoing)) {
+      if (axis === 'X' && isPageSpread(incoming.getAttribute('src')) && isPageSpread(outgoing?.getAttribute('src'))) {
         return animateDesktopPageTurn(container, incoming, outgoing, direction, decodedSize);
       }
       const distance = Math.max(1, axis === 'X' ? container.clientWidth : container.clientHeight);
@@ -1153,6 +1152,7 @@
       const displayType = item.dataset.displayType;
       return {
         ...slideshow,
+        images: desktopPreviewImages(slideshow.images),
         displayType,
         caption: item.querySelector('figcaption'),
         contained: displayType === 'Night|Journeys|',
@@ -1162,6 +1162,9 @@
       viewport: mobileViewport,
       reduceMotion,
       createVideo: createPreviewVideo,
+      isPageSpread,
+      animatePageTurn: animateDesktopPageTurn,
+      cancelPageTurn: (container) => desktopPageTurns.get(container)?.cancel(),
       stopVideo: (video) => { video.pause(); previewVideoObserver.unobserve(video); }
     });
 

@@ -16,7 +16,7 @@ window.portfolioWheelKeyframes = function (from, to, distance, axis = 'Y') {
 };
 
 // Phone-only Selected view: a project rail and one active media frame.
-window.createMobileSelected = function (entries, { viewport, reduceMotion, createVideo, stopVideo }) {
+window.createMobileSelected = function (entries, { viewport, reduceMotion, createVideo, stopVideo, isPageSpread, animatePageTurn, cancelPageTurn }) {
   const root = document.createElement('section');
   root.className = 'mobile-selected';
   root.setAttribute('aria-label', 'Selected projects');
@@ -57,13 +57,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   const preparedMedia = new Map();
   const mediaKey = (project, image) => `${project}:${image}`;
   const isVideoSource = (source) => /\.(mp4|mov|webm)(?:\?|$)/i.test(source);
-  const footballImageNumber = (source) => Number(/GODILOVEFOOTBALL_(\d+)(?:\.preview)?\.(?:webp|jpe?g|png)(?:\?|$)/i.exec(source)?.[1]);
-  const sourcesFor = (entry) => {
-    // The lower images belong to their paired frame rather than separate slides.
-    const images = entry.displayType === 'God I Love|Football|'
-      ? entry.images.filter((source) => ![7, 10].includes(footballImageNumber(source))) : entry.images;
-    return entry.video ? [entry.video, ...images] : images;
-  };
+  const sourcesFor = (entry) => entry.video ? [entry.video, ...entry.images] : entry.images;
   const pauseAutoplay = () => window.clearTimeout(autoplayTimer);
   const retire = (media) => {
     const backdrop = videoBackdrops.get(media);
@@ -78,10 +72,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     media?.remove();
   };
   function lowerStillSource(entry, source) {
-    if (entry.displayType === 'Du minder|mig om|') return source;
-    if (entry.displayType !== 'God I Love|Football|') return null;
-    const lowerNumber = { 5: 7, 9: 10 }[footballImageNumber(source)];
-    return lowerNumber ? entry.images.find((image) => footballImageNumber(image) === lowerNumber) : null;
+    return entry.displayType === 'Du minder|mig om|' ? source : null;
   }
   function createStillPair(image, entry, lowerSource) {
     const pair = document.createElement('div');
@@ -288,6 +279,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   async function render(nextProject, nextImage = 0, axis = 'Y', direction = 1, fromOffset = null, releaseSpeed = 0) {
     if (!viewport.matches || !entries.length) return;
     pauseAutoplay();
+    cancelPageTurn(mediaFrame);
     if (fromOffset === null) resetDrag();
     const request = ++loadId;
     const entry = entries[nextProject];
@@ -342,7 +334,13 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     stage.setAttribute('aria-label', `${entry.name}. Swipe left or right for images; up or down for projects.`);
     stage.setAttribute('aria-busy', 'false');
     buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(index === projectIndex)));
-    if (previous && !reduceMotion.matches) {
+    if (previous && !reduceMotion.matches && axis === 'X'
+      && isPageSpread(next.getAttribute('src')) && isPageSpread(previous.getAttribute('src'))) {
+      previous.classList.add('mobile-selected-outgoing');
+      previous.setAttribute('aria-hidden', 'true');
+      animatePageTurn(mediaFrame, next, previous, direction)
+        .then(() => retire(previous), () => retire(previous));
+    } else if (previous && !reduceMotion.matches) {
       previous.classList.add('mobile-selected-outgoing');
       previous.setAttribute('aria-hidden', 'true');
       const distance = axis === 'X' ? mediaFrame.clientWidth : mediaFrame.clientHeight;
