@@ -1,9 +1,34 @@
 .mobile-selected { display: none; }
 
 @media (max-width: 760px) and (pointer: coarse) {
+  html.mobile-landing-pending::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 10019;
+    background: #000;
+    pointer-events: none;
+  }
+  html.mobile-landing-pending .site-topbar { visibility: hidden; }
+  .mobile-selected-opening-brackets {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 0;
+    color: #fff;
+    font: 400 1rem/1 Arial, sans-serif;
+    z-index: 10021;
+    pointer-events: none;
+  }
+  .mobile-selected-opening-brackets span {
+    position: absolute;
+    top: 0;
+    left: 50%;
+  }
   html:has(.mobile-selected) { scrollbar-gutter: auto; }
   body.has-mobile-selected {
-    --mobile-rail-width: 20vw;
+    --mobile-rail-height: 0px;
     height: 100dvh;
     overflow: hidden;
   }
@@ -21,23 +46,34 @@
     line-height: 1.3;
   }
   .mobile-selected-rail {
+    display: none;
     position: absolute;
-    inset: 0 auto 0 0;
-    width: var(--mobile-rail-width);
-    padding: max(0.75rem, env(safe-area-inset-top)) 0.5rem 4.5rem;
-    overflow-y: auto;
-    overflow-x: hidden;
+    inset: auto 0 0;
+    align-items: stretch;
+    width: 100%;
+    height: var(--mobile-rail-height);
+    padding: 0 0 env(safe-area-inset-bottom);
+    overflow-y: hidden;
+    overflow-x: auto;
     overscroll-behavior: contain;
     scrollbar-width: none;
-    touch-action: pan-y;
+    touch-action: pan-x;
     -webkit-overflow-scrolling: touch;
-    border-right: 1px solid #222;
   }
   .mobile-selected-rail::-webkit-scrollbar { display: none; }
+  .mobile-selected-rail > .site-copyright {
+    flex: 0 0 auto;
+    align-self: end;
+    width: auto;
+    padding: 0.75rem;
+    white-space: nowrap;
+  }
   .mobile-selected-project {
     display: block;
-    width: 100%;
-    margin: 0 0 1.25rem;
+    flex: 0 0 auto;
+    width: auto;
+    height: 100%;
+    margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
@@ -52,11 +88,12 @@
   .mobile-selected-project > img,
   .mobile-selected-video-label {
     display: block;
-    width: 100%;
-    height: 5.5rem;
+    width: auto;
+    height: 100%;
+    max-width: none;
     object-fit: contain;
   }
-  .mobile-selected-video-label { display: grid; place-items: center; background: #171717; }
+  .mobile-selected-video-label { display: grid; width: 5.5rem; place-items: center; background: #171717; }
   .mobile-selected-project-label {
     display: none;
     margin-top: 0.4rem;
@@ -65,12 +102,58 @@
   }
   .mobile-selected-stage {
     position: absolute;
-    inset: 0 0 0 var(--mobile-rail-width);
+    inset: 0 0 var(--mobile-rail-height);
     overflow: hidden;
     background: #000;
     touch-action: none;
   }
   .mobile-selected-stage:focus-visible { outline: 1px solid #fff; outline-offset: -3px; }
+  .mobile-selected-opening {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    background: #000;
+    pointer-events: none;
+  }
+  .mobile-selected-opening-track {
+    position: absolute;
+    inset: 0;
+    perspective: var(--opening-perspective, 1600px);
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+  .mobile-selected-opening-frame {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: #000;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  .mobile-selected-opening-frame > img,
+  .mobile-selected-opening-frame > video {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    object-fit: cover;
+  }
+  .mobile-selected-opening-frame.is-contained > img,
+  .mobile-selected-opening-frame.is-contained > video {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+  }
+  .mobile-selected.is-opening .mobile-selected-caption,
+  .mobile-selected.is-opening .mobile-selected-image-count,
+  .mobile-selected.is-opening .mobile-selected-project-count,
+  .mobile-selected.is-opening .mobile-selected-next { visibility: hidden; }
   .mobile-selected-media { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; }
   .mobile-selected-media.is-dragging { will-change: transform; }
   .mobile-selected-video-backdrop {
@@ -112,6 +195,9 @@
     position: relative;
     z-index: 1;
   }
+  .mobile-selected-stage img[src*="ODAYS_Instagram_6"] {
+    object-position: right center;
+  }
   .is-contained .mobile-selected-media > img,
   .is-contained .mobile-selected-media > video { width: 80%; height: 80%; object-fit: contain; }
   .mobile-selected-stage .mobile-selected-media > video.mobile-selected-havtorn-video {
@@ -142,7 +228,7 @@
 
   .mobile-selected-still-pair {
     display: grid;
-    grid-template-rows: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, calc(50dvh - var(--navigation-half-height, 1rem))) minmax(0, 1fr);
     row-gap: calc(var(--navigation-half-height, 1rem) * 2);
     width: 100%;
     height: 100%;
@@ -167,7 +253,7 @@
   .mobile-selected-caption {
     position: absolute;
     z-index: 1;
-    top: calc(50% + var(--navigation-half-height, 1rem) + 0.75rem);
+    top: calc(50dvh + var(--navigation-half-height, 1rem) + 0.75rem);
     left: 0.5rem;
     right: 0.5rem;
     text-align: center;
@@ -185,14 +271,11 @@
     pointer-events: none;
   }
   .mobile-selected-project-count {
-    left: 0;
+    left: 0.75rem;
     right: auto;
-    width: var(--mobile-rail-width);
-    padding: 0.25rem 0;
-    background: #000;
-    mix-blend-mode: normal;
-    text-align: center;
-    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 1.5rem);
+    bottom: calc(var(--mobile-rail-height) + 0.75rem);
+    width: auto;
+    padding: 0;
   }
   .mobile-selected-next {
     position: absolute;

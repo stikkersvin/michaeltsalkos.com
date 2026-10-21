@@ -1286,9 +1286,11 @@
       }
       if (source.dataset.previewVideo) allPreviewImages.unshift(source.dataset.previewVideo);
       const cells = project.querySelectorAll(':scope > .list-row > span');
-      allPreviewHeading.textContent = source === project
+      const previewName = source === project
         ? cells[1]?.textContent.trim() || 'Project'
         : source.children[1]?.textContent.trim() || cells[1]?.textContent.trim() || 'Project';
+      allPreviewHeading.textContent = project === nightJourneysProject && source !== project
+        ? `Night Journeys presents: ${previewName}` : previewName;
       allPreviewCopy.replaceChildren();
       const copy = project.querySelector('.list-dropdown-copy');
       if (copy) allPreviewCopy.appendChild(copy.cloneNode(true));
@@ -1823,6 +1825,7 @@
       viewButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.view === view));
       });
+      window.dispatchEvent(new Event('portfolio:viewchange'));
       queueAllMarquees();
       updateDisplayTypeForScroll();
       const restoreScroll = () => {
@@ -1858,8 +1861,25 @@
         return;
       }
       if (view === activeView) return;
-      if (!document.startViewTransition || reduceMotion.matches || mobileViewport.matches) {
+      if (reduceMotion.matches || mobileViewport.matches) {
         setView(view);
+        return;
+      }
+      if (!document.startViewTransition) {
+        if (!window.portfolioPushTransition) { setView(view); return; }
+        const transition = { skipTransition() {} };
+        activeViewTransition = transition;
+        window.portfolioPushTransition(
+          () => setView(view, { restoreImmediately: true }),
+          view === 'list' ? 'to-all' : 'to-selected'
+        ).finally(() => {
+          activeViewTransition = null;
+          if (queuedView) {
+            const next = queuedView;
+            queuedView = null;
+            transitionView(next);
+          }
+        });
         return;
       }
       document.documentElement.dataset.viewDirection = view === 'list' ? 'to-all' : 'to-selected';

@@ -24,6 +24,10 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   let loadId = 0;
   let currentMedia = null;
   let autoplayTimer = null;
+  let opening = null;
+  let hasLanded = false;
+  let openingSeen = false;
+  try { openingSeen = sessionStorage.getItem('portfolio-mobile-opening-seen') === '1'; } catch (error) {}
   let error = false;
   let dragPreview = null;
   let dragDirection = 0;
@@ -162,7 +166,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   }
   function scheduleAutoplay() {
     pauseAutoplay();
-    if (!viewport.matches || document.hidden || !entries[projectIndex]?.autoplay
+    if (opening || !viewport.matches || document.hidden || !entries[projectIndex]?.autoplay
       || sourcesFor(entries[projectIndex]).length < 2) return;
     autoplayTimer = window.setTimeout(() => moveImage(1), 2000);
   }
@@ -250,7 +254,143 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     } else retire(previous);
     scheduleAutoplay();
   }
+  function finishOpening() {
+    document.documentElement.classList.remove('mobile-landing-pending');
+    const run = opening;
+    if (!run) return;
+    opening = null;
+    run.animation?.cancel();
+    run.frameAnimations?.forEach((animation) => animation.cancel());
+    run.barAnimation?.cancel();
+    run.brackets?.remove();
+    run.overlay?.querySelectorAll('video').forEach((video) => {
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    });
+    run.overlay?.remove();
+    root.classList.remove('is-opening');
+    scheduleAutoplay();
+  }
+  function playOpening() {
+    finishOpening();
+    if (!viewport.matches || !entries.length) return;
+    const run = { overlay: document.createElement('div') };
+    opening = run;
+    if (!reduceMotion.matches) document.documentElement.classList.add('mobile-landing-pending');
+    pauseAutoplay();
+    // Prepare the real project underneath while the reel starts immediately.
+    // Image downloads and decoding must never delay the animation clock.
+    render(0, 0);
+    if (reduceMotion.matches || document.hidden) { finishOpening(); return; }
+    run.overlay.className = 'mobile-selected-opening';
+    run.overlay.setAttribute('aria-hidden', 'true');
+    const track = document.createElement('div');
+    track.className = 'mobile-selected-opening-track';
+    run.overlay.appendChild(track);
+    const blackFrame = document.createElement('div');
+    blackFrame.className = 'mobile-selected-opening-frame';
+    track.appendChild(blackFrame);
+    entries.forEach((entry, index) => {
+      const frame = document.createElement('div');
+      frame.className = 'mobile-selected-opening-frame';
+      frame.classList.toggle('is-contained', entry.contained);
+      frame.dataset.displayType = entry.displayType;
+      // Prefer stills: the reel never starts the projects' video playback.
+      const source = entry.thumbnail || entry.images[0];
+      const media = source ? new Image() : document.createElement('video');
+      frame.appendChild(media);
+      track.appendChild(frame);
+      if (source) {
+        media.alt = '';
+        media.decoding = 'async';
+        if (index < 3) media.fetchPriority = 'high';
+        media.src = source;
+        return;
+      }
+      if (!entry.video) return;
+      media.muted = true;
+      media.defaultMuted = true;
+      media.playsInline = true;
+      media.preload = 'auto';
+      media.src = entry.video;
+    });
+    // Reuse the first face for a seamless final stop, without awaiting decoding.
+    const last = track.children[1].cloneNode(true);
+    track.appendChild(last);
+    stage.appendChild(run.overlay);
+    root.classList.add('is-opening');
+    const openingTiming = {
+      duration: 3800,
+      easing: 'cubic-bezier(0.12, 0.72, 0.18, 1)',
+      fill: 'forwards'
+    };
+    const openingStart = document.timeline.currentTime;
+    const bar = document.querySelector('.site-topbar');
+    run.barAnimation = bar?.animate([
+      { clipPath: 'inset(calc(50% - 0.5px) 50%)' },
+      { clipPath: 'inset(0px 0)' }
+    ], openingTiming);
+    run.brackets = document.createElement('div');
+    run.brackets.className = 'mobile-selected-opening-brackets';
+    run.brackets.setAttribute('aria-hidden', 'true');
+    run.brackets.innerHTML = '<span>[</span><span>]</span>';
+    root.appendChild(run.brackets);
+    [...run.brackets.children].forEach((bracket, index) => {
+      const start = index ? 0 : -8;
+      const end = index ? innerWidth / 2 - 20 : -innerWidth / 2 + 12;
+      bracket.animate([
+        { transform: `translate(${start}px, -50%)` },
+        { transform: `translate(${end}px, -50%)` }
+      ], openingTiming);
+    });
+    run.brackets.animate([
+      { opacity: 1 }, { opacity: 1, offset: 0.9 }, { opacity: 0 }
+    ], { duration: openingTiming.duration, fill: 'forwards' });
+    // Each face follows the front arc of a wheel. At the centre its transform
+    // is exactly neutral, so the last face matches the real project beneath.
+    const steps = track.children.length - 1;
+    const height = stage.clientHeight;
+    run.width = stage.clientWidth;
+    run.height = height;
+    const angleStep = 40 * Math.PI / 180;
+    const radius = height / (2 * Math.tan(angleStep / 2));
+    track.style.setProperty('--opening-perspective', `${height * 1.5}px`);
+    run.frameAnimations = [...track.children].map((frame, index) => {
+      const positions = new Set([0, steps]);
+      for (let quarter = -12; quarter <= 12; quarter++) {
+        const position = index + quarter / 4;
+        if (position >= 0 && position <= steps) positions.add(position);
+      }
+      const keyframes = [...positions].sort((a, b) => a - b).map((position) => {
+        const distance = index - position;
+        const angle = Math.max(-84 * Math.PI / 180, Math.min(84 * Math.PI / 180, distance * angleStep));
+        const y = radius * Math.sin(angle);
+        const z = radius * (Math.cos(angle) - 1);
+        return {
+          offset: position / steps,
+          transform: `translate3d(0, ${y}px, ${z}px) rotateX(${-angle}rad)`,
+          opacity: Math.min(1, Math.max(0, (3 - Math.abs(distance)) * 2))
+        };
+      });
+      return frame.animate(keyframes, openingTiming);
+    });
+    // This neutral animation provides the shared completion clock.
+    run.animation = track.animate([
+      { transform: 'translateZ(0)' }, { transform: 'translateZ(0)' }
+    ], openingTiming);
+    // Keep the bar reveal and every wheel face on the same clock.
+    if (openingStart !== null) {
+      [run.animation, run.barAnimation, ...run.frameAnimations, ...run.brackets.getAnimations({ subtree: true })]
+        .filter(Boolean).forEach((animation) => { animation.startTime = openingStart; });
+    }
+    document.documentElement.classList.remove('mobile-landing-pending');
+    run.animation.finished.then(() => {
+      if (opening === run) finishOpening();
+    }, () => {});
+  }
   function selectProject(index) {
+    finishOpening();
     const next = (index + entries.length) % entries.length;
     if (next === projectIndex && currentMedia) {
       loadId++;
@@ -303,6 +443,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   let touchStart = null;
   let suppressClickUntil = 0;
   stage.addEventListener('pointerdown', (event) => {
+    finishOpening();
     if (event.target.closest('button') || !currentMedia) return;
     pauseAutoplay();
     loadId++;
@@ -364,6 +505,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   stage.addEventListener('keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
     event.preventDefault();
+    finishOpening();
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') moveImage(event.key === 'ArrowLeft' ? -1 : 1);
     else selectProject(projectIndex + (event.key === 'ArrowUp' ? -1 : 1));
   });
@@ -371,8 +513,17 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   function syncViewport() {
     if (viewport.matches) {
       mountRail();
-      render(projectIndex, imageIndex);
+      if (!hasLanded) {
+        hasLanded = true;
+        if (openingSeen) render(projectIndex, imageIndex);
+        else {
+          openingSeen = true;
+          try { sessionStorage.setItem('portfolio-mobile-opening-seen', '1'); } catch (error) {}
+          playOpening();
+        }
+      } else render(projectIndex, imageIndex);
     } else {
+      finishOpening();
       pauseAutoplay();
       resetDrag();
       loadId++;
@@ -382,8 +533,20 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   }
   viewport.addEventListener('change', syncViewport);
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) pauseAutoplay();
+    if (document.hidden) { finishOpening(); pauseAutoplay(); }
     else scheduleAutoplay();
+  });
+  window.addEventListener('resize', () => {
+    if (opening?.animation && (opening.width !== stage.clientWidth || opening.height !== stage.clientHeight)) {
+      finishOpening();
+    }
+  });
+  reduceMotion.addEventListener('change', finishOpening);
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted && viewport.matches) {
+      finishOpening();
+      scheduleAutoplay();
+    }
   });
   syncViewport();
   return { nextProject: () => selectProject(projectIndex + 1) };

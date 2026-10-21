@@ -62,6 +62,92 @@
     preparePageTransition(event.viewTransition, window.navigation?.activation?.from?.url, location.href);
   });
 
+  // Older browsers can animate ordinary elements even without page snapshots.
+  // Keep the shared bar outside these animations, and animate only after a
+  // navigation is requested: no destination media needs to be preloaded.
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const fallbackKey = 'portfolio-pending-push';
+  const pushVectors = {
+    'to-all': [-1, 0], 'from-fonts': [-1, 0],
+    'to-selected': [1, 0], 'to-fonts': [1, 0],
+    'to-about': [0, -1], 'from-about': [0, 1]
+  };
+  const fallbackAnimations = new Set();
+  async function animatePage(direction, entering) {
+    if (motionPreference.matches || !Element.prototype.animate) return;
+    const vector = pushVectors[direction];
+    if (!vector) return;
+    document.documentElement.classList.add('portfolio-push-active');
+    const offset = `translate(${vector[0] * innerWidth * (entering ? -1 : 1)}px, ${vector[1] * innerHeight * (entering ? -1 : 1)}px)`;
+    const animations = Array.from(document.body.children)
+      .filter((element) => !element.matches('.site-topbar, script, style, link') && element.getClientRects().length)
+      .map((element) => element.animate(
+        [{ transform: entering ? offset : 'translate(0, 0)' },
+          { transform: entering ? 'translate(0, 0)' : offset }],
+        { duration: 325, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both', composite: 'add' }
+      ));
+    animations.forEach((animation) => fallbackAnimations.add(animation));
+    await Promise.all(animations.map((animation) => animation.finished.catch(() => {})));
+  }
+  function clearPageAnimations() {
+    fallbackAnimations.forEach((animation) => animation.cancel());
+    fallbackAnimations.clear();
+    document.documentElement.classList.remove('portfolio-push-active');
+  }
+  window.portfolioPushTransition = async (update, direction) => {
+    try {
+      await animatePage(direction, false);
+      await update();
+      clearPageAnimations();
+      await animatePage(direction, true);
+    } finally {
+      clearPageAnimations();
+    }
+  };
+  motionPreference.addEventListener('change', clearPageAnimations);
+  // Cancel retained exit styles when Back restores a page from memory.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      clearPageAnimations();
+      fallbackNavigating = false;
+    }
+  });
+
+  const nativePageTransitions = 'onpageswap' in window && 'onpagereveal' in window
+    && typeof CSSViewTransitionRule !== 'undefined';
+  let fallbackNavigating = false;
+  document.addEventListener('click', async (event) => {
+    const anchor = event.target.closest?.('.site-topbar a[href]');
+    if (!anchor || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey
+      || event.shiftKey || event.altKey || anchor.hasAttribute('download')
+      || (anchor.target && anchor.target !== '_self') || nativePageTransitions || motionPreference.matches) return;
+    const direction = pageTransitionDirection(location.href, anchor.href);
+    if (!direction) return;
+    if (fallbackNavigating) { event.preventDefault(); return; }
+    // Storage carries only a URL and direction, never page markup or assets.
+    try {
+      sessionStorage.setItem(fallbackKey, JSON.stringify({ url: anchor.href, direction, time: Date.now() }));
+    } catch (error) { return; }
+    event.preventDefault();
+    fallbackNavigating = true;
+    await animatePage(direction, false);
+    location.assign(anchor.href);
+  });
+  const enterFallbackPage = () => {
+    let pending;
+    try {
+      pending = JSON.parse(sessionStorage.getItem(fallbackKey));
+      sessionStorage.removeItem(fallbackKey);
+    } catch (error) { return; }
+    if (!pending || pending.url !== location.href || Date.now() - pending.time > 15000) return;
+    animatePage(pending.direction, true).finally(clearPageAnimations);
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', enterFallbackPage, { once: true });
+  } else {
+    enterFallbackPage();
+  }
+
   const TOPBAR_HTML = `
     <div class="site-topbar" data-shared-topbar>
     <nav class="topbar-links" aria-label="Main navigation">
@@ -91,6 +177,19 @@
   new ResizeObserver(syncBarHeight).observe(sharedBar);
   syncBarHeight();
 
+  const copyright = document.querySelector('.site-copyright');
+  const copyrightViewport = window.matchMedia('(max-width: 760px) and (pointer: coarse)');
+  function positionCopyright() {
+    const rail = document.querySelector('.mobile-selected-rail');
+    const target = copyrightViewport.matches && rail ? rail
+      : copyrightViewport.matches && isAbout ? document.querySelector('.experience-panel')
+      : document.body.classList.contains('list-view') ? document.querySelector('.work-grid')
+      : document.querySelector('.fonts-page') || document.body;
+    target?.appendChild(copyright);
+  }
+  copyrightViewport.addEventListener('change', () => window.requestAnimationFrame(positionCopyright));
+  window.addEventListener('portfolio:viewchange', positionCopyright);
+
   const mountViewToggle = () => {
     const viewToggle = document.querySelector('.view-toggle');
     const slot = document.querySelector('.topbar-view-slot');
@@ -104,6 +203,7 @@
     }
     sharedBar.querySelectorAll('.topbar-links a, .topbar-tools > a, .topbar-view-links a, .view-toggle button')
       .forEach((item) => item.classList.add('topbar-item'));
+    positionCopyright();
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountViewToggle, { once: true });

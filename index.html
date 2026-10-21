@@ -4,6 +4,19 @@
   <script src="assets/js/analytics-consent.js" defer></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    let mobileOpeningSeen = false;
+    try {
+      if (performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+        sessionStorage.removeItem('portfolio-mobile-opening-seen');
+      }
+      mobileOpeningSeen = sessionStorage.getItem('portfolio-mobile-opening-seen') === '1';
+    } catch (error) {}
+    if (matchMedia('(max-width: 760px) and (pointer: coarse)').matches
+      && !matchMedia('(prefers-reduced-motion: reduce)').matches && !mobileOpeningSeen) {
+      document.documentElement.classList.add('mobile-landing-pending');
+    }
+  </script>
   <title>Selected Graphic Works</title>
   <link rel="expect" blocking="render" href="#page-ready" />
   <link rel="icon" type="image/png" href="favicon.png" />
@@ -507,7 +520,7 @@
         </span>
       </span>
     </a>
-    <a class="project" href="#" data-year-sort="202410" data-curated data-spatial-stack data-display-type="Home|Shirt|24/25" data-dark-display-type="Away|Shirt|24/25" data-description="Football shirt design for FC KADK." style="--spatial-stack-height: 165svh;" data-quick-view="Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_6.svg|Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_4.preview.webp|Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_5.preview.webp">
+    <a class="project" href="#" data-year-sort="202410" data-spatial-stack data-display-type="Home|Shirt|24/25" data-dark-display-type="Away|Shirt|24/25" data-description="Football shirt design for FC KADK." style="--spatial-stack-height: 165svh;" data-quick-view="Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_6.svg|Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_4.preview.webp|Portfolio_QuickView/Portfolio_QuickView_FCKADK/Portfolio_QuickView_FCKADK_5.preview.webp">
       <span class="project-copy"><span class="year" data-list-year="2024">2024</span><span class="title"><span class="theme-label theme-label-light">Home Shirt 24/25</span><span class="theme-label theme-label-dark">Away Shirt 24/25</span><br>Football Shirt</span></span>
       <span class="spatial-stack-images home-shirt-spatial-flip" aria-hidden="true">
         <span class="home-shirt-flip-card">

@@ -2255,6 +2255,11 @@
         cursor: default;
       }
 
+      /* Move O Days photo 6 slightly left within the cropped preview. */
+      .spatial-project-cover > img[src*="ODAYS_Instagram_6"] {
+        object-position: 65% center;
+      }
+
       .spatial-project-cover > img {
         display: block;
         width: 100%;
