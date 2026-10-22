@@ -1,7 +1,7 @@
 (() => {
   const path = window.location.pathname || "";
-  const isAvaPage = path.includes("/Portfolio_AVA/");
-  const isNeueNightPage = path.includes("/Portfolio_NeueNight/");
+  const isAvaPage = (path.includes("/Portfolio_AVA/") || path.includes("/fonts/ava/"));
+  const isNeueNightPage = (path.includes("/Portfolio_NeueNight/") || path.includes("/fonts/neue-night/"));
   const descriptionData = isAvaPage
     ? {
       body: "AVA is a modular variable typeface for the Academy of Visual Arts in Frankfurt. Built from sharp base modules, the font can shift between different expressions, making it flexible for both campaign graphics, social media and printed matter.",

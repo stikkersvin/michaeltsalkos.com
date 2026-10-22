@@ -16,7 +16,7 @@ window.portfolioWheelKeyframes = function (from, to, distance, axis = 'Y') {
 };
 
 // Phone-only Selected view: a project rail and one active media frame.
-window.createMobileSelected = function (entries, { viewport, reduceMotion, createVideo, stopVideo, isPageSpread, animatePageTurn, cancelPageTurn }) {
+window.createMobileSelected = function (entries, { viewport, reduceMotion, createVideo, stopVideo, isPageSpread, animatePageTurn, cancelPageTurn, initialProjectSlug }) {
   const root = document.createElement('section');
   root.className = 'mobile-selected';
   root.setAttribute('aria-label', 'Selected projects');
@@ -35,7 +35,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   const caption = root.querySelector('.mobile-selected-caption');
   const imageCount = root.querySelector('.mobile-selected-image-count');
   const projectCount = root.querySelector('.mobile-selected-project-count');
-  let projectIndex = 0;
+  let projectIndex = Math.max(0, entries.findIndex((entry) => entry.projectSlug === initialProjectSlug));
   let imageIndex = 0;
   let loadId = 0;
   let currentMedia = null;
@@ -44,6 +44,7 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
   let hasLanded = false;
   let openingSeen = false;
   try { openingSeen = sessionStorage.getItem('portfolio-mobile-opening-seen') === '1'; } catch (error) {}
+  if (initialProjectSlug) openingSeen = true;
   let error = false;
   let dragPreview = null;
   let dragDirection = 0;

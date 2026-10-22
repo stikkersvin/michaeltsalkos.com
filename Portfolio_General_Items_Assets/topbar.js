@@ -17,10 +17,10 @@
   const path = decodeURIComponent(window.location.pathname || '');
   const base = new URL('../', document.currentScript.src).href.replace(/\/$/, '');
   const linkGraphic = `${base}/index.html?view=spatial`;
-  const linkFonts = `${base}/Portfolio_Fonts_Tab/Portfolio_Fonts_Landingpage/fonts.html`;
-  const linkAbout = `${base}/Portfolio_About/about.html`;
-  const isFonts = path.includes('/Portfolio_Fonts_Tab/');
-  const isAbout = path.includes('/Portfolio_About/');
+  const linkFonts = `${base}/fonts/`;
+  const linkAbout = `${base}/about/`;
+  const isFonts = path.includes('/Portfolio_Fonts_Tab/') || path.includes('/fonts/');
+  const isAbout = path.includes('/Portfolio_About/') || path.includes('/about/');
 
   // Fonts lives to the left; About lives below. Animate the navigation
   // snapshots without loading either page's media in advance.

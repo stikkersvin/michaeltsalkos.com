@@ -2,6 +2,8 @@
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const workGrid = document.querySelector('.work-grid');
     const projects = Array.from(document.querySelectorAll('.project'));
+    const requestedProjectSlug = new URLSearchParams(location.search).get('project');
+    const requestedProject = projects.find((project) => project.dataset.projectSlug === requestedProjectSlug);
     const viewButtons = document.querySelectorAll('[data-view]');
     const quickView = document.querySelector('.quick-view');
     const quickViewLoader = document.createElement('span');
@@ -678,7 +680,7 @@
       mobileSpatialCatalogue.appendChild(mobileIntro);
 
       const curatedProjects = projects
-        .filter((project) => project.hasAttribute('data-curated'))
+        .filter((project) => project.hasAttribute('data-curated') || (mobileViewport.matches && project === requestedProject))
         .sort((a, b) => Number(b.dataset.yearSort) - Number(a.dataset.yearSort));
 
       curatedProjects.forEach((project) => {
@@ -711,6 +713,7 @@
         const item = document.createElement('figure');
         item.className = 'mobile-spatial-catalogue-item';
         item.dataset.displayType = project.dataset.displayType || '';
+        item.dataset.projectSlug = project.dataset.projectSlug;
         if (videoSource) item.dataset.previewVideo = videoSource;
         item.dataset.slideshowIndex = String(mobileSlideshows.length);
         item.dataset.slideshowImageIndex = String(Math.max(0, slideshowImages.indexOf(source)));
@@ -956,6 +959,7 @@
         cover.className = 'spatial-project-cover';
         cover.style.setProperty('--project-columns', span);
         cover.dataset.displayType = sourceItem.dataset.displayType;
+        cover.dataset.projectSlug = sourceItem.dataset.projectSlug;
         const slideshowIndex = Number(sourceItem.dataset.slideshowIndex);
         const originalSlideshow = mobileSlideshows[slideshowIndex];
         const frameSlideshow = { ...originalSlideshow, images: desktopPreviewImages(originalSlideshow.images) };
@@ -1154,12 +1158,14 @@
         ...slideshow,
         images: desktopPreviewImages(slideshow.images),
         displayType,
+        projectSlug: item.dataset.projectSlug,
         caption: item.querySelector('figcaption'),
         contained: displayType === 'Night|Journeys|',
         autoplay: true
       };
     }), {
       viewport: mobileViewport,
+      initialProjectSlug: requestedProjectSlug,
       reduceMotion,
       createVideo: createPreviewVideo,
       isPageSpread,
@@ -2342,7 +2348,9 @@
     } catch (error) {}
     const requestedView = new URLSearchParams(window.location.search).get('view');
     const initialView = mobileViewport.matches ? 'spatial'
+      : requestedProject && !requestedProject.hasAttribute('data-curated') ? 'list'
       : ['spatial', 'list'].includes(requestedView) ? requestedView
+      : requestedProject ? 'spatial'
       : savedView === 'list' ? 'list' : 'spatial';
     if (initialView === 'spatial' && mobileViewport.matches && nightJourneysProject) {
       spatialScrollPosition = nightJourneysProject.offsetTop;
@@ -2350,7 +2358,22 @@
     if (initialView === 'spatial' && document.documentElement.dataset.selectedReload === 'true') {
       spatialScrollPosition = 0;
     }
-    setView(initialView);
+    const openLinkedProject = () => {
+      if (!requestedProject || mobileViewport.matches) return;
+      if (document.body.classList.contains('list-view')) {
+        showAllPreview(requestedProject, true);
+        requestedProject.scrollIntoView({ block: 'center', behavior: 'instant' });
+      } else {
+        const cover = [...spatialProjectGrid.querySelectorAll('.spatial-project-cover')]
+          .find((item) => item.dataset.projectSlug === requestedProjectSlug);
+        cover?.parentElement.scrollIntoView({ block: 'start', behavior: 'instant' });
+        spatialScrollPosition = window.scrollY;
+      }
+    };
+    setView(initialView).then(openLinkedProject);
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) openLinkedProject();
+    }, { once: true });
 
     const defaultDisplayType = document.querySelector('.display-type-default');
     let displayPointerFrame = null;
