@@ -66,6 +66,87 @@ body.dark .site-topbar {
   --bar-rule: rgba(255, 255, 255, 0.1);
 }
 
+.site-topbar .topbar-project-details { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  body:not(.list-view) .site-topbar {
+    left: var(--selected-bar-left, 0px);
+    width: var(--selected-bar-width, 100%);
+    transition: left 350ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .site-topbar.is-frame-docked {
+    --bar-side-padding: 0.65em;
+    background: transparent;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    font-size: clamp(0.375rem, calc(var(--selected-bar-width) / 38), 0.75rem);
+  }
+
+  .site-topbar.is-frame-docked > * { padding-inline: 0.65em; }
+
+  .site-topbar.is-frame-docked :is(.topbar-links, .topbar-tools) {
+    background: var(--bar-background);
+    flex-wrap: nowrap;
+    gap: 0.8em;
+    white-space: nowrap;
+  }
+
+  .site-topbar.is-frame-docked .topbar-links > a + a,
+  .site-topbar.is-frame-docked .topbar-view-slot,
+  .site-topbar.is-frame-docked .topbar-tools > a,
+  .site-topbar.is-frame-docked .topbar-name,
+  .site-topbar.is-frame-docked .topbar-item::before,
+  .site-topbar.is-frame-docked .topbar-item::after { display: none; }
+
+  .site-topbar.is-frame-docked .topbar-project-details {
+    --bar-rule: rgba(0, 0, 0, 0.15);
+    background: #fff;
+    color: #111;
+    display: grid;
+    align-self: stretch;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+    font-weight: 500;
+    animation: project-details-open 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .topbar-project-details > span {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    padding: 0 0.65em;
+    border-right: 1px solid var(--bar-rule);
+    font-size: var(--project-detail-size, inherit);
+    white-space: nowrap;
+  }
+
+  .topbar-project-details > span:last-child { border-right: 0; }
+  .topbar-project-details > span[hidden] { display: none; }
+  .topbar-project-details > [data-label="Name"] { justify-content: center; }
+
+  .site-topbar.is-frame-docked .topbar-theme {
+    flex-basis: 2em;
+    border-left: 0;
+  }
+
+  .site-topbar.is-frame-docked .topbar-knob {
+    width: 1.25em;
+    height: 1.25em;
+  }
+}
+
+@keyframes project-details-open {
+  from { clip-path: inset(0 50%); opacity: 0; }
+  to { clip-path: inset(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.list-view) .site-topbar { transition: none; }
+  .site-topbar.is-frame-docked .topbar-project-details { animation: none; }
+}
+
 body.list-view .site-topbar {
   opacity: 0.8;
   transition: opacity 150ms ease;

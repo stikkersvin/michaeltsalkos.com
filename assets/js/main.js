@@ -976,19 +976,11 @@
             image.draggable = false;
             cover.appendChild(image);
           });
-          const caption = document.createElement('span');
-          caption.className = 'spatial-project-caption';
-          caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
-          cover.appendChild(caption);
           row.appendChild(cover);
           return;
         }
         if (cover.dataset.displayType === 'The Values|As A Miracle|Photosynthesis') {
           mountComperiPanels(cover, frameSlideshow);
-          const caption = document.createElement('span');
-          caption.className = 'spatial-project-caption';
-          caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
-          cover.appendChild(caption);
           row.appendChild(cover);
           return;
         }
@@ -1011,10 +1003,7 @@
           image.decoding = 'async';
           image.draggable = false;
         }
-        const caption = document.createElement('span');
-        caption.className = 'spatial-project-caption';
-        caption.append(...sourceItem.querySelector('figcaption').cloneNode(true).childNodes);
-        cover.append(image, caption);
+        cover.appendChild(image);
         if (frameSlideshow.video && frameSlideshow.images.length) {
           mountVideoSlides(cover, image, frameSlideshow.video, frameSlideshow.images, frameSlideshow.name);
         }
@@ -1057,7 +1046,7 @@
               outgoing.alt = '';
               outgoing.setAttribute('aria-hidden', 'true');
               outgoing.className = 'spatial-project-outgoing';
-              cover.insertBefore(outgoing, caption);
+              cover.insertBefore(outgoing, counter);
               outgoingImage = outgoing;
             }
             frameImageIndex = nextIndex;
@@ -1150,6 +1139,105 @@
       spatialRowIndex++;
     }
     workGrid.appendChild(spatialProjectGrid);
+
+    // Dock horizontally opposite the hovered project. The center line opens navigation.
+    const selectedBar = document.querySelector('.site-topbar');
+    const barDetails = document.createElement('div');
+    barDetails.className = 'topbar-project-details';
+    barDetails.setAttribute('role', 'group');
+    barDetails.setAttribute('aria-label', 'Project details');
+    const barDetailFields = ['Client', 'Name', 'Format', 'Year'].map((label) => {
+      const field = document.createElement('span');
+      field.dataset.label = label;
+      barDetails.appendChild(field);
+      return field;
+    });
+    selectedBar?.querySelector('.topbar-name')?.after(barDetails);
+    const detailMeasure = document.createElement('canvas').getContext('2d');
+    const fitBarDetails = () => {
+      if (!barDetails.clientWidth || !detailMeasure) return;
+      const style = window.getComputedStyle(selectedBar);
+      const fontSize = Number.parseFloat(style.fontSize);
+      detailMeasure.font = `500 ${fontSize}px ${style.fontFamily}`;
+      const visibleFields = barDetailFields.filter((field) => !field.hidden);
+      const widths = visibleFields.map((field) => detailMeasure.measureText(field.textContent).width);
+      const available = Math.max(0, barDetails.clientWidth - fontSize * 1.3 * visibleFields.length - visibleFields.length);
+      const scale = Math.min(1, available / Math.max(1, widths.reduce((sum, width) => sum + width, 0)));
+      barDetails.style.setProperty('--project-detail-size', `${fontSize * scale}px`);
+      barDetails.style.gridTemplateColumns = widths.map((width) => `${width * scale + fontSize * 1.3 + 1}fr`).join(' ');
+    };
+    new ResizeObserver(fitBarDetails).observe(barDetails);
+    const barHoverViewport = window.matchMedia('(hover: hover) and (pointer: fine)');
+    let barProject = null;
+    let barPointer = null;
+    let barPositionFrame = null;
+    const positionSelectedBar = () => {
+      barPositionFrame = null;
+      if (!selectedBar) return;
+      if (!barHoverViewport.matches || mobileViewport.matches || document.body.classList.contains('list-view')) barProject = null;
+      const covers = barProject?.parentElement?.querySelectorAll('.spatial-project-cover');
+      const opposite = covers?.length === 2 ? [...covers].find((cover) => cover !== barProject) : null;
+      const bounds = opposite?.getBoundingClientRect();
+      selectedBar.classList.toggle('is-frame-docked', !!bounds);
+      if (bounds) {
+        const project = projects.find((item) => item.dataset.projectSlug === barProject.dataset.projectSlug);
+        const cells = project?.querySelectorAll(':scope > .list-row > span');
+        barDetailFields.forEach((field, index) => {
+          const cell = cells?.[[2, 1, 3, 0][index]];
+          const themeLabel = cell?.querySelector(document.body.classList.contains('dark') ? '.theme-label-dark' : '.theme-label-light');
+          let value = (themeLabel || cell?.querySelector('.all-format-label') || cell)?.textContent.trim().replace(/\s+/g, ' ') || '—';
+          if (field.dataset.label === 'Year') value = value.match(/^\d{4}(?:\s*[—–-]\s*(?:present|\d{4}))?/)?.[0] || value;
+          field.textContent = value;
+          field.title = `${field.dataset.label}: ${value}`;
+          field.setAttribute('aria-label', field.title);
+        });
+        const [clientField, nameField] = barDetailFields;
+        clientField.hidden = clientField.textContent !== '—'
+          && clientField.textContent.normalize('NFKC').toLowerCase() === nameField.textContent.normalize('NFKC').toLowerCase();
+        if (clientField.hidden) {
+          nameField.title = `Client and name: ${nameField.textContent}`;
+          nameField.setAttribute('aria-label', nameField.title);
+        }
+        selectedBar.style.setProperty('--selected-bar-left', `${bounds.left}px`);
+        selectedBar.style.setProperty('--selected-bar-width', `${bounds.width}px`);
+        fitBarDetails();
+      } else {
+        selectedBar.style.removeProperty('--selected-bar-left');
+        selectedBar.style.removeProperty('--selected-bar-width');
+      }
+    };
+    const queueSelectedBar = () => {
+      if (barPositionFrame === null) barPositionFrame = window.requestAnimationFrame(positionSelectedBar);
+    };
+    const selectBarProject = (target) => {
+      if (!selectedBar || document.body.classList.contains('is-resizing-frames')) return;
+      const centerDistance = Math.abs((barPointer?.y ?? -Infinity) - window.innerHeight / 2);
+      // Give the center navigation an invisible approach area on both sides.
+      if (centerDistance <= selectedBar.offsetHeight / 2 + 40) {
+        barProject = null;
+      } else {
+        if (target?.closest('.site-topbar')) return;
+        barProject = target?.closest('.spatial-project-cover') || null;
+      }
+      queueSelectedBar();
+    };
+    document.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'touch') return;
+      barPointer = { x: event.clientX, y: event.clientY };
+      selectBarProject(event.target);
+    }, { passive: true });
+    window.addEventListener('scroll', () => {
+      if (barPointer) selectBarProject(document.elementFromPoint(barPointer.x, barPointer.y));
+    }, { passive: true });
+    window.addEventListener('resize', queueSelectedBar);
+    window.addEventListener('portfolio:viewchange', () => {
+      barProject = null;
+      queueSelectedBar();
+    });
+    barHoverViewport.addEventListener('change', queueSelectedBar);
+    selectedBar?.querySelector('.topbar-theme')?.addEventListener('click', queueSelectedBar);
+    const barFrameObserver = new ResizeObserver(queueSelectedBar);
+    spatialProjectGrid.querySelectorAll('.spatial-project-cover').forEach((cover) => barFrameObserver.observe(cover));
 
     const mobileSelected = window.createMobileSelected(spatialCovers.map((item, index) => {
       const slideshow = mobileSlideshows[Number(item.dataset.slideshowIndex)];
