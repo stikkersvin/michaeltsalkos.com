@@ -1171,9 +1171,24 @@
     let barProject = null;
     let barPointer = null;
     let barPositionFrame = null;
+    let barExpandTimer = null;
+    const cancelBarExpansion = () => {
+      window.clearTimeout(barExpandTimer);
+      barExpandTimer = null;
+    };
     const positionSelectedBar = () => {
       barPositionFrame = null;
       if (!selectedBar) return;
+      const isAll = document.body.classList.contains('list-view');
+      const listBounds = isAll && barHoverViewport.matches && !mobileViewport.matches
+        ? workGrid.getBoundingClientRect() : null;
+      selectedBar.classList.toggle('is-all-preview-docked', !!listBounds);
+      if (listBounds) {
+        selectedBar.classList.remove('is-frame-docked');
+        selectedBar.style.setProperty('--selected-bar-left', `${listBounds.left}px`);
+        selectedBar.style.setProperty('--selected-bar-width', `${listBounds.width}px`);
+        return;
+      }
       if (!barHoverViewport.matches || mobileViewport.matches || document.body.classList.contains('list-view')) barProject = null;
       const covers = barProject?.parentElement?.querySelectorAll('.spatial-project-cover');
       const opposite = covers?.length === 2 ? [...covers].find((cover) => cover !== barProject) : null;
@@ -1214,10 +1229,23 @@
       const centerDistance = Math.abs((barPointer?.y ?? -Infinity) - window.innerHeight / 2);
       // Give the center navigation an invisible approach area on both sides.
       if (centerDistance <= selectedBar.offsetHeight / 2 + 40) {
-        barProject = null;
+        // Briefly crossing the navigation lane should not interrupt a side-to-side move.
+        if (barProject && barExpandTimer === null) {
+          barExpandTimer = window.setTimeout(() => {
+            barExpandTimer = null;
+            barProject = null;
+            queueSelectedBar();
+          }, 160);
+        }
+        return;
       } else {
+        cancelBarExpansion();
         if (target?.closest('.site-topbar')) return;
-        barProject = target?.closest('.spatial-project-cover') || null;
+        if (document.body.classList.contains('list-view')) {
+          barProject = null;
+        } else {
+          barProject = target?.closest('.spatial-project-cover') || null;
+        }
       }
       queueSelectedBar();
     };
@@ -1231,11 +1259,22 @@
     }, { passive: true });
     window.addEventListener('resize', queueSelectedBar);
     window.addEventListener('portfolio:viewchange', () => {
+      cancelBarExpansion();
       barProject = null;
       queueSelectedBar();
     });
-    barHoverViewport.addEventListener('change', queueSelectedBar);
+    barHoverViewport.addEventListener('change', () => {
+      cancelBarExpansion();
+      queueSelectedBar();
+    });
     selectedBar?.querySelector('.topbar-theme')?.addEventListener('click', queueSelectedBar);
+    selectedBar?.addEventListener('wheel', (event) => {
+      if (event.ctrlKey || event.defaultPrevented || mobileViewport.matches
+        || !document.body.classList.contains('list-view')) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? workGrid.clientHeight : 1;
+      event.preventDefault();
+      workGrid.scrollBy({ top: event.deltaY * unit, left: event.deltaX * unit, behavior: 'instant' });
+    }, { passive: false });
     const barFrameObserver = new ResizeObserver(queueSelectedBar);
     spatialProjectGrid.querySelectorAll('.spatial-project-cover').forEach((cover) => barFrameObserver.observe(cover));
 
@@ -1518,6 +1557,43 @@
     });
     const allMarqueeAnimations = new Map();
     const allBracketRows = [...workGrid.querySelectorAll('.all-bracket-row')];
+    // Leave a fixed, empty lane around the navigation. Rows cross the lane
+    // as complete entries instead of scrolling underneath the bar.
+    const allLaneRows = [...workGrid.querySelectorAll('.list-row, .list-dropdown-row[data-quick-view]')];
+    const allLaneOffsets = new WeakMap();
+    let allLaneFrame = null;
+    const updateAllNavigationLane = () => {
+      allLaneFrame = null;
+      const enabled = document.body.classList.contains('list-view') && barHoverViewport.matches && !mobileViewport.matches;
+      const barBounds = selectedBar?.getBoundingClientRect();
+      const laneTop = (barBounds?.top || 0) - 16;
+      const laneBottom = (barBounds?.bottom || 0) + 16;
+      const positions = allLaneRows.map((row) => {
+        const bounds = row.getBoundingClientRect();
+        const top = bounds.top - (allLaneOffsets.get(row) || 0);
+        return { row, height: bounds.height, bottom: top + bounds.height, visible: !!row.getClientRects().length };
+      });
+      const rowClearance = Math.ceil(Math.max(0, ...positions.filter(({ visible }) => visible).map(({ height }) => height)));
+      // A constant offset preserves native scrolling below the lane. Recomputing
+      // it from the first row's position would cancel scrolling until that row changed.
+      const shift = laneBottom - laneTop + rowClearance;
+      positions.forEach(({ row, bottom, visible }) => {
+        const offset = enabled && visible && bottom > laneTop ? shift : 0;
+        allLaneOffsets.set(row, offset);
+        if (offset) row.style.translate = `0 ${offset}px`;
+        else row.style.removeProperty('translate');
+      });
+    };
+    const queueAllNavigationLane = () => {
+      if (allLaneFrame === null) allLaneFrame = requestAnimationFrame(updateAllNavigationLane);
+    };
+    workGrid.addEventListener('scroll', queueAllNavigationLane, { passive: true });
+    window.addEventListener('resize', queueAllNavigationLane);
+    window.addEventListener('portfolio:viewchange', queueAllNavigationLane);
+    barHoverViewport.addEventListener('change', queueAllNavigationLane);
+    new ResizeObserver(queueAllNavigationLane).observe(selectedBar);
+    new MutationObserver(queueAllNavigationLane).observe(workGrid, { attributes: true, attributeFilter: ['class'], subtree: true });
+    queueAllNavigationLane();
     let allMarqueeFrame = null;
     function queueAllMarquees() {
       if (allMarqueeFrame !== null) return;
@@ -1727,8 +1803,9 @@
       if (!project) return;
       pauseAllAutoplay();
       const direction = activeAllSource && (activeAllSource.compareDocumentPosition(source) & Node.DOCUMENT_POSITION_PRECEDING) ? -1 : 1;
-      if (force || activeAllSource?.closest('.project') !== project) setAllDetailsOpen(false);
       activeAllSource = source;
+      // Keep the user's details preference as the preview changes projects.
+      setAllDetailsOpen(allPreview.classList.contains('is-details-open'));
       allPreviewIndex = 0;
       allPreviewImages = quickViewImages(source);
       if (!allPreviewImages.length && !source.dataset.previewVideo) {

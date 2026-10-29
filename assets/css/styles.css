@@ -2703,6 +2703,42 @@
       border-left: 1px solid var(--rule);
     }
 
+    @media (min-width: 761px), (pointer: fine) {
+      body.list-view .work-grid {
+        bottom: 2.5rem;
+      }
+
+      body.list-view .work-grid > .site-copyright {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        z-index: 5;
+        width: 50%;
+        height: 2.5rem;
+        padding: 0.75rem var(--all-side-padding);
+        border-left: 1px solid var(--rule);
+        background: var(--page);
+      }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      body.list-view .work-grid {
+        padding-bottom: 7rem;
+        overflow-anchor: none;
+      }
+
+      /* Translated rows remain interactive at their displayed positions.
+         Their original project boxes must not intercept neighboring rows. */
+      body.list-view .work-grid .project {
+        pointer-events: none;
+      }
+
+      body.list-view .work-grid .project > .list-row,
+      body.list-view .work-grid .list-dropdown-row[data-quick-view] {
+        pointer-events: auto;
+      }
+    }
+
     body.list-view .list-header,
     body.list-view .list-row,
     body.list-view .list-dropdown-row {
