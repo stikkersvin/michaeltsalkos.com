@@ -2515,6 +2515,53 @@
         outline-offset: -6px;
       }
 
+      .spatial-project-details {
+        position: absolute;
+        display: grid;
+        align-items: end;
+        z-index: 5;
+        left: 1rem;
+        bottom: 1.25rem;
+        max-width: calc(100% - 7rem);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: left;
+        text-wrap: balance;
+        mix-blend-mode: normal;
+        pointer-events: none;
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .spatial-project-cover :is(.spatial-project-details, .spatial-project-counter) {
+          opacity: 0;
+          transition: opacity 400ms ease;
+        }
+
+        .spatial-project-cover:is(:hover, :focus-visible) :is(.spatial-project-details, .spatial-project-counter),
+        .spatial-project-cover:has(:focus-visible) :is(.spatial-project-details, .spatial-project-counter) {
+          opacity: 1;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spatial-project-cover :is(.spatial-project-details, .spatial-project-counter) { transition: none; }
+      }
+
+      .spatial-project-details > span {
+        grid-area: 1 / 1;
+        opacity: 0;
+        transition: opacity 400ms ease;
+      }
+      .spatial-project-details > .is-current { opacity: 1; }
+      @media (prefers-reduced-motion: reduce) {
+        .spatial-project-details > span { transition: none; }
+      }
+
+      .spatial-project-details > [data-label="Client"] { text-transform: uppercase; }
+      html.desktop-opening-active .spatial-project-details { visibility: hidden; }
+
       .spatial-project-counter {
         position: absolute;
         right: 1rem;

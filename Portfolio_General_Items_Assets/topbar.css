@@ -1,3 +1,15 @@
+@property --bar-left-alpha {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --bar-right-alpha {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
 html {
   scrollbar-gutter: stable;
 }
@@ -73,7 +85,26 @@ body.dark .site-topbar {
     left: var(--selected-bar-left, 0px);
     width: var(--selected-bar-width, 100%);
     transition: left 350ms cubic-bezier(0.22, 1, 0.36, 1),
-      width 350ms cubic-bezier(0.22, 1, 0.36, 1);
+      width 350ms cubic-bezier(0.22, 1, 0.36, 1),
+      --bar-left-alpha 400ms ease, --bar-right-alpha 400ms ease;
+  }
+
+  body:not(.list-view) .site-topbar {
+    --bar-hover-mask: linear-gradient(to right,
+      rgba(0, 0, 0, var(--bar-left-alpha)) 0 var(--bar-fade-split, 50%),
+      rgba(0, 0, 0, var(--bar-right-alpha)) var(--bar-fade-split, 50%) 100%);
+    -webkit-mask-image: var(--bar-hover-mask);
+    mask-image: var(--bar-hover-mask);
+  }
+
+  .site-topbar.is-project-faded {
+    --bar-left-alpha: var(--bar-left-target, 1);
+    --bar-right-alpha: var(--bar-right-target, 1);
+  }
+
+  .site-topbar.is-project-faded:is(:hover, :focus-within) {
+    --bar-left-alpha: 1;
+    --bar-right-alpha: 1;
   }
 
   .site-topbar.is-all-preview-docked {

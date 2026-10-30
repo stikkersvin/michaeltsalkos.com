@@ -1140,33 +1140,85 @@
     }
     workGrid.appendChild(spatialProjectGrid);
 
-    // Dock horizontally opposite the hovered project. The center line opens navigation.
+    // Keep navigation in place and fade the section over the hovered project.
     const selectedBar = document.querySelector('.site-topbar');
-    const barDetails = document.createElement('div');
-    barDetails.className = 'topbar-project-details';
-    barDetails.setAttribute('role', 'group');
-    barDetails.setAttribute('aria-label', 'Project details');
-    const barDetailFields = ['Client', 'Name', 'Format', 'Year'].map((label) => {
-      const field = document.createElement('span');
-      field.dataset.label = label;
-      barDetails.appendChild(field);
-      return field;
-    });
-    selectedBar?.querySelector('.topbar-name')?.after(barDetails);
-    const detailMeasure = document.createElement('canvas').getContext('2d');
-    const fitBarDetails = () => {
-      if (!barDetails.clientWidth || !detailMeasure) return;
-      const style = window.getComputedStyle(selectedBar);
-      const fontSize = Number.parseFloat(style.fontSize);
-      detailMeasure.font = `500 ${fontSize}px ${style.fontFamily}`;
-      const visibleFields = barDetailFields.filter((field) => !field.hidden);
-      const widths = visibleFields.map((field) => detailMeasure.measureText(field.textContent).width);
-      const available = Math.max(0, barDetails.clientWidth - fontSize * 1.3 * visibleFields.length - visibleFields.length);
-      const scale = Math.min(1, available / Math.max(1, widths.reduce((sum, width) => sum + width, 0)));
-      barDetails.style.setProperty('--project-detail-size', `${fontSize * scale}px`);
-      barDetails.style.gridTemplateColumns = widths.map((width) => `${width * scale + fontSize * 1.3 + 1}fr`).join(' ');
+    const projectDetailLoops = new WeakMap();
+    const syncProjectDetailLoop = (cover) => {
+      const state = projectDetailLoops.get(cover);
+      if (!state) return;
+      const hovered = cover.matches(':hover, :focus-visible') || !!cover.querySelector(':focus-visible');
+      if (hovered && state.running) return;
+      window.clearTimeout(state.timer);
+      state.running = false;
+      const fields = [...state.details.children];
+      fields.forEach((field, index) => field.classList.toggle('is-current', index === 0));
+      if (!hovered || reduceMotion.matches || fields.length < 2) return;
+      state.running = true;
+      let index = 0;
+      const advance = () => {
+        fields[index].classList.remove('is-current');
+        state.timer = window.setTimeout(() => {
+          index = (index + 1) % fields.length;
+          fields[index].classList.add('is-current');
+          // Allow 400 ms to fade in, followed by two seconds fully visible.
+          state.timer = window.setTimeout(advance, 2400);
+        }, 400);
+      };
+      state.timer = window.setTimeout(advance, 2400);
     };
-    new ResizeObserver(fitBarDetails).observe(barDetails);
+    const renderSelectedProjectDetails = () => {
+      spatialProjectGrid.querySelectorAll('.spatial-project-cover').forEach((cover) => {
+        const project = projects.find((item) => item.dataset.projectSlug === cover.dataset.projectSlug);
+        const cells = project?.querySelectorAll(':scope > .list-row > span');
+        const values = [2, 1, 3, 0].map((cellIndex) => {
+          const cell = cells?.[cellIndex];
+          const themed = cell?.querySelector(document.body.classList.contains('dark') ? '.theme-label-dark' : '.theme-label-light');
+          return (themed || cell?.querySelector('.all-format-label') || cell)?.textContent.trim().replace(/\s+/g, ' ') || '—';
+        });
+        values[3] = values[3].match(/^\d{4}(?:\s*[—–-]\s*(?:present|\d{4}))?/)?.[0] || values[3];
+        const duplicateName = values[0] !== '—' && values[0].normalize('NFKC').toLowerCase() === values[1].normalize('NFKC').toLowerCase();
+        let details = cover.querySelector('.spatial-project-details');
+        if (!details) {
+          details = document.createElement('span');
+          details.className = 'spatial-project-details';
+          details.setAttribute('role', 'group');
+          cover.appendChild(details);
+          projectDetailLoops.set(cover, { details, timer: null, running: false });
+          ['pointerenter', 'pointerleave', 'focusin', 'focusout'].forEach((type) => {
+            cover.addEventListener(type, () => syncProjectDetailLoop(cover));
+          });
+        }
+        const state = projectDetailLoops.get(cover);
+        window.clearTimeout(state.timer);
+        state.running = false;
+        details.replaceChildren();
+        const entries = [
+          ['Name', values[1]],
+          ...(!duplicateName ? [['Client', values[0]]] : []),
+          ['Format', values[2]],
+          ['Year', values[3]]
+        ];
+        details.setAttribute('aria-label', entries.map(([label, value]) => `${label}: ${value}`).join('; '));
+        entries.forEach(([label, value]) => {
+          const field = document.createElement('span');
+          field.dataset.label = label;
+          field.textContent = value;
+          field.title = `${label}: ${value}`;
+          field.setAttribute('aria-hidden', 'true');
+          details.appendChild(field);
+        });
+        syncProjectDetailLoop(cover);
+      });
+    };
+    renderSelectedProjectDetails();
+    reduceMotion.addEventListener('change', () => {
+      spatialProjectGrid.querySelectorAll('.spatial-project-cover').forEach((cover) => {
+        const state = projectDetailLoops.get(cover);
+        if (state) { window.clearTimeout(state.timer); state.running = false; }
+        syncProjectDetailLoop(cover);
+      });
+    });
+    selectedBar?.querySelector('.topbar-theme')?.addEventListener('click', renderSelectedProjectDetails);
     const barHoverViewport = window.matchMedia('(hover: hover) and (pointer: fine)');
     let barProject = null;
     let barPointer = null;
@@ -1184,41 +1236,28 @@
         ? workGrid.getBoundingClientRect() : null;
       selectedBar.classList.toggle('is-all-preview-docked', !!listBounds);
       if (listBounds) {
+        selectedBar.classList.remove('is-project-faded');
         selectedBar.classList.remove('is-frame-docked');
         selectedBar.style.setProperty('--selected-bar-left', `${listBounds.left}px`);
         selectedBar.style.setProperty('--selected-bar-width', `${listBounds.width}px`);
         return;
       }
       if (!barHoverViewport.matches || mobileViewport.matches || document.body.classList.contains('list-view')) barProject = null;
-      const covers = barProject?.parentElement?.querySelectorAll('.spatial-project-cover');
-      const opposite = covers?.length === 2 ? [...covers].find((cover) => cover !== barProject) : null;
-      const bounds = opposite?.getBoundingClientRect();
-      selectedBar.classList.toggle('is-frame-docked', !!bounds);
+      // Keep navigation stationary; only fade the portion over the active frame.
+      selectedBar.classList.remove('is-frame-docked');
+      selectedBar.style.removeProperty('--selected-bar-left');
+      selectedBar.style.removeProperty('--selected-bar-width');
+      const bounds = barProject?.getBoundingClientRect();
+      selectedBar.classList.toggle('is-project-faded', !!bounds);
       if (bounds) {
-        const project = projects.find((item) => item.dataset.projectSlug === barProject.dataset.projectSlug);
-        const cells = project?.querySelectorAll(':scope > .list-row > span');
-        barDetailFields.forEach((field, index) => {
-          const cell = cells?.[[2, 1, 3, 0][index]];
-          const themeLabel = cell?.querySelector(document.body.classList.contains('dark') ? '.theme-label-dark' : '.theme-label-light');
-          let value = (themeLabel || cell?.querySelector('.all-format-label') || cell)?.textContent.trim().replace(/\s+/g, ' ') || '—';
-          if (field.dataset.label === 'Year') value = value.match(/^\d{4}(?:\s*[—–-]\s*(?:present|\d{4}))?/)?.[0] || value;
-          field.textContent = value;
-          field.title = `${field.dataset.label}: ${value}`;
-          field.setAttribute('aria-label', field.title);
-        });
-        const [clientField, nameField] = barDetailFields;
-        clientField.hidden = clientField.textContent !== '—'
-          && clientField.textContent.normalize('NFKC').toLowerCase() === nameField.textContent.normalize('NFKC').toLowerCase();
-        if (clientField.hidden) {
-          nameField.title = `Client and name: ${nameField.textContent}`;
-          nameField.setAttribute('aria-label', nameField.title);
-        }
-        selectedBar.style.setProperty('--selected-bar-left', `${bounds.left}px`);
-        selectedBar.style.setProperty('--selected-bar-width', `${bounds.width}px`);
-        fitBarDetails();
-      } else {
-        selectedBar.style.removeProperty('--selected-bar-left');
-        selectedBar.style.removeProperty('--selected-bar-width');
+        const barBounds = selectedBar.getBoundingClientRect();
+        const start = Math.max(0, bounds.left - barBounds.left);
+        const end = Math.min(barBounds.width, bounds.right - barBounds.left);
+        const coversWholeBar = start <= 1 && end >= barBounds.width - 1;
+        const split = coversWholeBar ? barBounds.width / 2 : start <= 1 ? end : start;
+        selectedBar.style.setProperty('--bar-fade-split', `${split}px`);
+        selectedBar.style.setProperty('--bar-left-target', start <= 1 ? '0.1' : '1');
+        selectedBar.style.setProperty('--bar-right-target', end >= barBounds.width - 1 ? '0.1' : '1');
       }
     };
     const queueSelectedBar = () => {
@@ -1249,11 +1288,13 @@
       }
       queueSelectedBar();
     };
-    document.addEventListener('pointermove', (event) => {
+    const updateBarHover = (event) => {
       if (event.pointerType === 'touch') return;
       barPointer = { x: event.clientX, y: event.clientY };
       selectBarProject(event.target);
-    }, { passive: true });
+    };
+    document.addEventListener('pointermove', updateBarHover, { passive: true });
+    document.addEventListener('pointerover', updateBarHover, { passive: true });
     window.addEventListener('scroll', () => {
       if (barPointer) selectBarProject(document.elementFromPoint(barPointer.x, barPointer.y));
     }, { passive: true });
