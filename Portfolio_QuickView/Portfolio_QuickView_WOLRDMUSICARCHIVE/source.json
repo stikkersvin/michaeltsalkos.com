@@ -1,0 +1,39 @@
+{
+  "source": "https://www.instagram.com/p/DeTy6xUjNuF/",
+  "project": "WOLRD MUSIC ARCHIVE",
+  "year": "2026 sep",
+  "client": "Self Initiated",
+  "format": "Archive",
+  "media": [
+    {
+      "order": 1,
+      "type": "video",
+      "file": "WOLRD_MUSIC_ARCHIVE_01.mp4"
+    },
+    {
+      "order": 2,
+      "type": "image",
+      "file": "WOLRD_MUSIC_ARCHIVE_02.jpg"
+    },
+    {
+      "order": 3,
+      "type": "video",
+      "file": "WOLRD_MUSIC_ARCHIVE_03.mp4"
+    },
+    {
+      "order": 4,
+      "type": "image",
+      "file": "WOLRD_MUSIC_ARCHIVE_04.jpg"
+    },
+    {
+      "order": 5,
+      "type": "video",
+      "file": "WOLRD_MUSIC_ARCHIVE_05.mp4"
+    },
+    {
+      "order": 6,
+      "type": "image",
+      "file": "WOLRD_MUSIC_ARCHIVE_06.jpg"
+    }
+  ]
+}

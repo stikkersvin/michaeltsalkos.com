@@ -619,8 +619,8 @@
       const move = async (direction) => {
         const nextIndex = (index + direction + sources.length) % sources.length;
         const request = ++loadId;
-        const isVideo = nextIndex === 0;
-        const next = isVideo ? createPreviewVideo(videoSource, name, { eager: true }) : new Image();
+        const isVideo = /\.(mp4|mov|webm)(?:\?|$)/i.test(sources[nextIndex]);
+        const next = isVideo ? createPreviewVideo(sources[nextIndex], name, { eager: true }) : new Image();
         if (isVideo) {
           next.poster = stillImages[0];
           await new Promise((resolve) => {
@@ -1475,6 +1475,11 @@
           gallery.classList.add('list-dropdown-gallery-god-football');
         }
         images.forEach((source, index) => {
+          if (/\.(mp4|mov|webm)(?:\?|$)/i.test(source)) {
+            gallery.classList.add('list-dropdown-gallery-video');
+            gallery.appendChild(createPreviewVideo(source, name));
+            return;
+          }
           const image = document.createElement('img');
           image.src = source;
           image.alt = `${name} project image`;
@@ -1732,25 +1737,36 @@
     });
     let previewWheelTime = 0;
     let previewWheelDelta = 0;
-    let previewWheelConsumed = false;
+    let previewWheelLastStep = -Infinity;
+    let previewWheelDirection = 0;
     allPreviewMedia.addEventListener('wheel', (event) => {
       if (!document.body.classList.contains('list-view') || event.ctrlKey
+        || !allPreviewMedia.contains(event.target)
         || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      // Only the media area changes projects; description scrolling stays native.
       event.preventDefault();
       const now = performance.now();
-      // Treat a trackpad gesture and its momentum as one project change.
-      if (now - previewWheelTime > 180) {
-        previewWheelDelta = 0;
-        previewWheelConsumed = false;
-      }
-      previewWheelTime = now;
-      if (previewWheelConsumed) return;
       const unit = event.deltaMode === 1 ? 16
         : event.deltaMode === 2 ? allPreviewMedia.clientHeight : 1;
-      previewWheelDelta += event.deltaY * unit;
+      const delta = event.deltaY * unit;
+      const direction = Math.sign(delta);
+      if (now - previewWheelTime > 180 || direction !== previewWheelDirection) {
+        previewWheelDelta = 0;
+        previewWheelLastStep = -Infinity;
+      }
+      previewWheelTime = now;
+      previewWheelDirection = direction;
+      // Pace continuous scrolling without locking the rest of a trackpad gesture.
+      // Discard deltas during the pause so momentum cannot build up a queue.
+      if (now - previewWheelLastStep < 650) {
+        previewWheelDelta = 0;
+        return;
+      }
+      previewWheelDelta += delta;
       if (Math.abs(previewWheelDelta) < 40) return;
-      previewWheelConsumed = true;
-      moveAllProject(previewWheelDelta > 0 ? 1 : -1);
+      previewWheelDelta = 0;
+      previewWheelLastStep = now;
+      moveAllProject(direction);
     }, { passive: false });
     allPreviewMedia.addEventListener('keydown', (event) => {
       if (allPreviewMedia.dataset.canBrowse !== 'true' || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
