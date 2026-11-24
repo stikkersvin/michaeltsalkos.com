@@ -106,12 +106,47 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       media.preload = 'auto';
       if (entry.images[0]) media.poster = entry.images[0];
       record.promise = new Promise((resolve) => {
-        record.cancel = () => resolve(false);
-        media.addEventListener('loadeddata', () => {
-          record.ready = !record.disposed;
+        let settled = false;
+        let fallingBack = false;
+        let timeout;
+        const cleanup = () => {
+          window.clearTimeout(timeout);
+          media.removeEventListener('loadeddata', onReady);
+          media.removeEventListener('error', useStill);
+        };
+        const finish = (ready) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          record.ready = ready && !record.disposed;
           resolve(record.ready);
-        }, { once: true });
-        media.addEventListener('error', () => resolve(false), { once: true });
+        };
+        const onReady = () => finish(true);
+        const useStill = () => {
+          if (settled || fallingBack || record.disposed) return;
+          fallingBack = true;
+          cleanup();
+          // A missing codec or stalled download must not block project swipes.
+          media.pause();
+          media.removeAttribute('src');
+          media.load();
+          const stillSource = entry.thumbnail || entry.images.find((item) => !isVideoSource(item));
+          if (!stillSource) { finish(false); return; }
+          const still = new Image();
+          still.alt = `${entry.name}, preview`;
+          still.decoding = 'async';
+          still.draggable = false;
+          still.src = stillSource;
+          const lowerSource = lowerStillSource(entry, stillSource);
+          record.media = lowerSource ? createStillPair(still, entry, lowerSource) : still;
+          record.video = false;
+          const images = lowerSource ? [...record.media.children] : [still];
+          Promise.all(images.map((item) => item.decode())).then(() => finish(true), () => finish(false));
+        };
+        record.cancel = () => finish(false);
+        media.addEventListener('loadeddata', onReady, { once: true });
+        media.addEventListener('error', useStill, { once: true });
+        timeout = window.setTimeout(useStill, 4000);
         media.src = source;
         media.load();
       });
@@ -287,8 +322,6 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
     const sources = sourcesFor(entry);
     const source = sources[nextImage];
     const prepared = prepareMedia(nextProject, nextImage);
-    const isVideo = prepared.video;
-    let next = prepared.media;
     if (!currentMedia) preloadNeighbours(nextProject, nextImage);
     error = false;
     stage.setAttribute('aria-busy', 'true');
@@ -306,6 +339,8 @@ window.createMobileSelected = function (entries, { viewport, reduceMotion, creat
       return;
     }
     if (request !== loadId || !viewport.matches) return;
+    const isVideo = prepared.video;
+    let next = prepared.media;
     preparedMedia.delete(mediaKey(nextProject, nextImage));
     // Move the decoded node out of the drag layer before removing that layer.
     next.remove();
